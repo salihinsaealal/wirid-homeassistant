@@ -32,7 +32,7 @@
     },
     "error": {
       "name_required": "Enter a name for the phone.",
-      "yaml_still_loaded": "The old Wirid template sensors are still loaded. Remove the Wirid block from `configuration.yaml`, restart Home Assistant, then add the phone again. Or choose Start fresh."
+      "yaml_still_loaded": "The old Wirid template sensors are still loaded. Remove the Wirid block from `configuration.yaml`, restart Home Assistant, then add the phone again."
     }
   },
   "options": {

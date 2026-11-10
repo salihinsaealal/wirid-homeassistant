@@ -32,7 +32,7 @@
     },
     "error": {
       "name_required": "Masukkan nama telefon.",
-      "yaml_still_loaded": "Sensor templat Wirid yang lama masih dimuatkan. Buang blok Wirid daripada `configuration.yaml`, mulakan semula Home Assistant, kemudian tambah telefon sekali lagi. Atau pilih Mula baharu."
+      "yaml_still_loaded": "Sensor templat Wirid yang lama masih dimuatkan. Buang blok Wirid daripada `configuration.yaml`, mulakan semula Home Assistant, kemudian tambah telefon sekali lagi."
     }
   },
   "options": {

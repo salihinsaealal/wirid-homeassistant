@@ -113,13 +113,11 @@ class WiridConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if still_provided(self.hass, old):
             errors["base"] = "yaml_still_loaded"
-        if user_input is not None:
-            if user_input[CHOICE] == START_FRESH:
-                self._take_over = False
-                return await self.async_step_done()
-            if not errors:
-                self._take_over = True
-                return await self.async_step_done()
+        # While the YAML block is still loaded, neither choice proceeds: taking over would be undone
+        # by a template reload, and starting fresh would put _2 sensors beside the live old ones.
+        if user_input is not None and not errors:
+            self._take_over = user_input[CHOICE] == TAKE_OVER
+            return await self.async_step_done()
         return self.async_show_form(
             step_id="takeover",
             data_schema=vol.Schema({

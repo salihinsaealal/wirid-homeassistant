@@ -118,3 +118,14 @@ async def test_second_phone_never_offered_takeover(hass):
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {"phone_name": "Aisyah"})
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {"user_id": "nobody"})
     assert result["step_id"] == "done"
+
+
+async def test_start_fresh_refused_while_yaml_loaded(hass):
+    _seed(hass, live=True)
+    result = await _to_takeover(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"choice": "start_fresh"})
+    assert result["type"] is FlowResultType.FORM and result["step_id"] == "takeover"
+    assert result["errors"] == {"base": "yaml_still_loaded"}
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    assert len(find_old(hass)) == 2
+    assert all(e.platform == "template" for e in find_old(hass))
