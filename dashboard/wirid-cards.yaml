@@ -202,22 +202,24 @@
         const __me = Object.values(states).filter(s => s.entity_id.endsWith('last_sent') && s.attributes && s.attributes.wirid_user_id && s.attributes.wirid_user_id === user.id).sort((a, b) => (Date.parse(b.state) || 0) - (Date.parse(a.state) || 0))[0]; const P = __me ? __me.attributes.wirid_prefix : null; if (!P) return '';
         const st = s => (states[s] || {}).state;
         const n = s => Number(st(s)) || 0;
+        // Totals of 100,000+ in short form (1.2M) so a third of a phone's width always fits them.
+        const fmt = v => v >= 100000 ? new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(v) : v.toLocaleString();
         const tile = (label, k, sub) => {
           const ch = st(`sensor.${P}${k}_change`);
           const has = ch !== undefined && ch !== 'unavailable' && ch !== 'unknown' && !isNaN(Number(ch));
           const v = Number(ch), up = v >= 0, c = up ? '#34E3A0' : '#FF6B86';
-          const pill = has ? `<span style="padding:2px 8px;border-radius:999px;background:${c}22;color:${c};font-size:11px;font-weight:700">${up ? '▲' : '▼'} ${Math.abs(v)}%</span>` : '';
-          return `<div style="flex:1;min-width:0;padding:12px;border-radius:16px;background:rgba(255,255,255,0.04)">
-              <div style="font-size:12px;color:var(--secondary-text-color);font-weight:600">${label}</div>
-              <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);margin:4px 0 6px">${n(`sensor.${P}${k}_total`).toLocaleString()}</div>
-              ${pill}<div style="font-size:10px;color:var(--secondary-text-color);margin-top:4px">${sub}</div>
+          const pill = has ? `<span style="display:inline-block;max-width:100%;padding:2px 7px;border-radius:999px;background:${c}22;color:${c};font-size:11px;font-weight:700;white-space:nowrap">${up ? '▲' : '▼'} ${Math.abs(v)}%</span>` : '';
+          return `<div style="flex:1 1 0;min-width:0;overflow:hidden;padding:10px 8px;border-radius:16px;background:rgba(255,255,255,0.04)">
+              <div style="font-size:12px;color:var(--secondary-text-color);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+              <div style="font-size:clamp(16px, 5.2vw, 22px);font-weight:700;color:var(--primary-text-color);margin:4px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmt(n(`sensor.${P}${k}_total`))}</div>
+              ${pill}<div style="font-size:10px;line-height:1.25;color:var(--secondary-text-color);margin-top:4px;overflow-wrap:anywhere">${sub}</div>
             </div>`;
         };
         return `<div style="font-size:15px;font-weight:700;color:var(--primary-text-color);margin-bottom:10px">Periods</div>
-                <div style="display:flex;gap:8px">
-                  ${tile('7 days', 'week', 'vs 7 days before')}
-                  ${tile('Month', 'month', 'vs same days last month')}
-                  ${tile('Year', 'year', 'vs same days last year')}
+                <div style="display:flex;gap:6px">
+                  ${tile('7 days', 'week', 'vs prev 7 days')}
+                  ${tile('Month', 'month', 'vs last month')}
+                  ${tile('Year', 'year', 'vs last year')}
                 </div>`;
       ]]]
 
