@@ -115,7 +115,12 @@ class DhikrSensor(WiridEntity, SensorEntity):
             self._attr_native_value = d.all_time
         else:
             self._attr_native_value = current.today if current is not None else 0
-            self._attr_extra_state_attributes = {"color": d.color, "mono": d.mono, "slug": d.slug}
+            self._attr_extra_state_attributes = {
+                "color": d.color,
+                "mono": d.mono,
+                "slug": d.slug,
+                "wirid_prefix": self._entry.data[CONF_PREFIX],
+            }
 
 
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities: AddEntitiesCallback) -> None:

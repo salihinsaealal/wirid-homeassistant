@@ -87,6 +87,7 @@ async def test_friendly_name_kept(hass, hass_client_no_auth):
     assert s.attributes["friendly_name"].endswith('Doa "ibu" é today')
     assert s.attributes["color"] == "#FF8FB1" and s.attributes["mono"] == "DI"
     assert s.attributes["slug"] == "custom_random_1a2b"
+    assert s.attributes["wirid_prefix"] == "wirid_"
 
 
 async def test_restart_restores(hass, hass_client_no_auth):

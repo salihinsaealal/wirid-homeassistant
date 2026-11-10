@@ -84,7 +84,7 @@
       ]]]
 
 # ---------- 2. Each dhikr today: coloured bars ----------
-# Lists every dhikr the phone reports (sensor.<prefix><slug>_today with a slug attribute), so new
+# Lists every dhikr this phone reports (a *_today sensor whose wirid_prefix attribute equals P), so new
 # dhikr appear on their own. Colour/monogram come from the sensor; fallback grey + first 2 letters.
 - type: custom:button-card
   triggers_update: all
@@ -108,8 +108,8 @@
         const dev = ((states[`sensor.${P}last_sent`] || {}).attributes || {}).friendly_name || '';
         const owner = dev.replace(/ Last sent$/, '');
         const list = Object.values(states)
-          .filter(s => s.entity_id.startsWith(`sensor.${P}`) && s.entity_id.endsWith('_today')
-                       && s.attributes && s.attributes.slug)
+          .filter(s => s.entity_id.endsWith('_today') && s.attributes
+                       && s.attributes.slug && s.attributes.wirid_prefix === P)
           .map(s => {
             const a = s.attributes;
             let name = (a.friendly_name || a.slug).replace(/ today$/, '');
@@ -117,7 +117,7 @@
             const c = /^#[0-9a-fA-F]{6}$/.test(a.color || '') ? a.color : '#9AA4B1';
             const m = a.mono || name.replace(/[^\p{L}\p{N}]/gu, '').slice(0, 2).toUpperCase();
             return { name, c, m, today: Number(s.state) || 0,
-                     all: n(s.entity_id.replace(/_today$/, '_all_time')) };
+                     all: n(`sensor.${P}${a.slug}_all_time`) };
           })
           .sort((a, b) => b.today - a.today || b.all - a.all);
         const max = Math.max(1, ...list.map(d => d.today));
