@@ -1,0 +1,13 @@
+{
+  "domain": "wirid",
+  "name": "Wirid",
+  "codeowners": ["@salihinsaealal"],
+  "config_flow": true,
+  "dependencies": ["webhook"],
+  "documentation": "https://github.com/salihinsaealal/wirid-homeassistant",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/salihinsaealal/wirid-homeassistant/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
