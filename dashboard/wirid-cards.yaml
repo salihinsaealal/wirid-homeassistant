@@ -223,7 +223,7 @@
 
 # ---------- 5. Last 14 days: stacked by dhikr ----------
 # Follows the viewer like the other cards (no user id to edit). The phone sends the last 14 days per
-# dhikr (Wirid app 0.3.0+ with integration 0.2.0+); an older app shows a short note instead.
+# dhikr (Wirid app 0.4.0+ with integration 0.2.0+); an older app shows a short note instead.
 - type: custom:button-card
   triggers_update: all
   show_name: false

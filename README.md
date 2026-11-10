@@ -64,7 +64,7 @@ Only `*_all_time` are totals for long-term statistics, so Home Assistant can gra
 
 Paste the items under a view's `cards:`. Every card finds the phone linked to whoever is looking: you see your stats, your family see theirs, and someone with no phone sees nothing.
 
-The "Last 14 days" card draws each day as a bar stacked by dhikr, in the app's colours. It follows the viewer like the others, so there is nothing to edit; it needs Wirid app 0.3.0 or newer on the phone.
+The "Last 14 days" card draws each day as a bar stacked by dhikr, in the app's colours. It follows the viewer like the others, so there is nothing to edit; it needs Wirid app 0.4.0 or newer on the phone.
 
 ## Payload (for developers)
 
