@@ -37,9 +37,7 @@ If you used Wirid's earlier "Copy HA config" (template sensors in `configuration
 2. Restart Home Assistant.
 3. Add the Wirid integration. On the first phone it finds the old sensors and offers **Take over**. Choose it.
 
-Your phone keeps the same entity names (`sensor.wirid_today_total` and so on), so graphs and long-term statistics continue where they were. If the old block is still loaded, the integration refuses to continue until it's gone, because otherwise you'd get duplicate `_2` sensors.
-
-If you had renamed any of the old entities, rename them back to `sensor.wirid_…` before taking over, or their history won't line up.
+Your phone keeps the same entity names (`sensor.wirid_today_total` and so on), so graphs and long-term statistics continue where they were. Taken-over entities keep their exact old IDs, including ones Home Assistant derived from the dhikr's name (`sensor.wirid_allahu_akbar_all_time`) and ones you renamed. If the old block is still loaded, the integration refuses to continue until it's gone, because otherwise you'd get duplicate `_2` sensors.
 
 ## Entities
 
@@ -51,7 +49,7 @@ Each phone's entities start with its prefix: `sensor.wirid_` for the first phone
 | `today_tier` | `emerald` up to the goal, `gold` past it, `purple` past twice | |
 | `today_sessions`, `today_minutes` | Sessions and time today | sessions, min |
 | `today_subuh` … `today_tahajjud` | Today by waktu (9) | dhikr |
-| `<dhikr>_today`, `<dhikr>_all_time` | Each dhikr you've used | dhikr |
+| `<dhikr>_today`, `<dhikr>_all_time` | Each dhikr you've used (`_today` carries `all_time_entity`, its pair's ID) | dhikr |
 | `week_total`, `month_total`, `year_total` | Period totals | dhikr |
 | `week_change`, `month_change`, `year_change` | Change from the previous period | % |
 | `streak_current`, `streak_best`, `active_days` | Consistency | days |
@@ -71,7 +69,7 @@ Paste the items under a view's `cards:`. Every card finds the phone linked to wh
 The statistics graph card can't follow the viewer by itself, so it is one copy per person:
 
 1. Find the person's user ID: Settings → People → Users → open the user (the ID is in the address bar), or Developer tools → States → `sensor.<prefix>last_sent` → attribute `wirid_user_id`.
-2. Copy the `statistics-graph` card from the file, replace `<USER_ID>` with that ID, and change `sensor.wirid_` to that phone's prefix.
+2. Copy the `statistics-graph` card from the file, replace `<USER_ID>` with that ID, and replace the example entities with that phone's real `*_all_time` entity IDs, copied from its device page (Settings → Devices). A phone that took over the old YAML sensors keeps their old names (for example `sensor.wirid_allahu_akbar_all_time` rather than `sensor.wirid_allahuakbar_all_time`).
 3. Repeat for each person with a phone.
 
 ## Payload (for developers)

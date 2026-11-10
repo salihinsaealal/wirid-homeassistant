@@ -117,7 +117,7 @@
             const c = /^#[0-9a-fA-F]{6}$/.test(a.color || '') ? a.color : '#9AA4B1';
             const m = a.mono || name.replace(/[^\p{L}\p{N}]/gu, '').slice(0, 2).toUpperCase();
             return { name, c, m, today: Number(s.state) || 0,
-                     all: n(`sensor.${P}${a.slug}_all_time`) };
+                     all: n(a.all_time_entity || `sensor.${P}${a.slug}_all_time`) };
           })
           .sort((a, b) => b.today - a.today || b.all - a.all);
         const max = Math.max(1, ...list.map(d => d.today));
@@ -226,9 +226,11 @@
 # A statistics-graph cannot use templates, so it is a per-person copy. Show it only to one user:
 #   1. Settings > People: open the person, copy their user id (or Settings > People > Users).
 #   2. Replace <USER_ID> below with it.
-#   3. Replace the entities with that phone's *_all_time sensors. The prefix is the "wirid_..."
-#      part of the entity ids (wirid_ for the first phone, wirid_aisyah_ for a second one, ...);
-#      the slug is the dhikr key. Remove or add lines for the dhikr that person uses.
+#   3. Replace the entities with that phone's *_all_time sensors. Copy the real entity ids from
+#      the phone's device page (Settings > Devices > the phone): a phone that took over the old
+#      YAML sensors keeps their old names (e.g. sensor.wirid_allahu_akbar_all_time), so don't
+#      guess. The ids below are the usual ones for a first phone (prefix wirid_ + dhikr key; a
+#      second phone has wirid_aisyah_ and so on). Remove or add lines for the dhikr that person uses.
 #   4. For another person, duplicate this whole card with their user id and their prefix.
 - type: statistics-graph
   title: Last 14 days
@@ -240,14 +242,13 @@
     - condition: user
       users: ["<USER_ID>"]
   entities:
-    - { entity: sensor.wirid_subhanallah_all_time,            name: SubhanAllah }
-    - { entity: sensor.wirid_alhamdulillah_all_time,          name: Alhamdulillah }
-    - { entity: sensor.wirid_allahu_akbar_all_time,           name: Allahu Akbar }
-    - { entity: sensor.wirid_astaghfirullah_all_time,         name: Astaghfirullah }
-    - { entity: sensor.wirid_selawat_all_time,                name: Selawat }
-    - { entity: sensor.wirid_la_ilaha_illallah_all_time,      name: Tahlil }
-    - { entity: sensor.wirid_la_hawla_wa_la_quwwata_all_time, name: Hawqalah }
-    - { entity: sensor.wirid_free_count_all_time,             name: Free count }
+    - { entity: sensor.wirid_subhanallah_all_time,   name: SubhanAllah }
+    - { entity: sensor.wirid_alhamdulillah_all_time, name: Alhamdulillah }
+    - { entity: sensor.wirid_allahuakbar_all_time,   name: Allahu Akbar }
+    - { entity: sensor.wirid_istighfar_all_time,     name: Astaghfirullah }
+    - { entity: sensor.wirid_selawat_all_time,       name: Selawat }
+    - { entity: sensor.wirid_tahlil_all_time,        name: Tahlil }
+    - { entity: sensor.wirid_hawqalah_all_time,      name: Hawqalah }
 
 # ---------- 6. Footer: active days, last session, last sent ----------
 - type: custom:button-card
@@ -268,6 +269,7 @@
     main: >
       [[[
         const __me = Object.values(states).filter(s => s.entity_id.endsWith('last_sent') && s.attributes && s.attributes.wirid_user_id && s.attributes.wirid_user_id === user.id).sort((a, b) => (Date.parse(b.state) || 0) - (Date.parse(a.state) || 0))[0]; const P = __me ? __me.attributes.wirid_prefix : null; if (!P) return '';
+        const n = e => Number((states[e] || {}).state) || 0;
         const s = states[`sensor.${P}last_session`] || { state: '', attributes: {} };
         const ended = s.attributes.ended ? new Date(s.attributes.ended) : null;
         const sent = __me ? new Date(__me.state) : null;
@@ -278,7 +280,7 @@
             <div style="min-width:0"><div style="font-size:15px;font-weight:700;color:var(--primary-text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${big}</div>
             <div style="font-size:11px;color:var(--secondary-text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${small}</div></div></div>`;
         return `<div style="display:flex;gap:12px">
-            ${item('mdi:calendar-check', '#34E3A0', (states[`sensor.${P}active_days`] || {}).state + ' days', 'active')}
+            ${item('mdi:calendar-check', '#34E3A0', n(`sensor.${P}active_days`).toLocaleString() + ' days', 'active')}
             ${item('mdi:history', '#5CC8FF', s.state && s.state !== 'unavailable' ? Number(s.state).toLocaleString() + ' · ' + (s.attributes.routine || '') : '—', 'last session ' + t(ended))}
           </div>
           <div style="font-size:10px;color:var(--secondary-text-color);text-align:right;margin-top:8px">Synced ${t(sent)}</div>`;
