@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -101,6 +101,7 @@ class DhikrSensor(WiridEntity, SensorEntity):
         super().__init__(entry, all_id if all_time else today_id, "")
         self._slug = dhikr.slug
         self._all_time = all_time
+        self._all_id = all_id
         self._last = dhikr
         self._attr_state_class = SensorStateClass.TOTAL if all_time else SensorStateClass.MEASUREMENT
 
@@ -120,7 +121,14 @@ class DhikrSensor(WiridEntity, SensorEntity):
                 "mono": d.mono,
                 "slug": d.slug,
                 "wirid_prefix": self._entry.data[CONF_PREFIX],
+                "all_time_entity": self._all_time_entity(),
             }
+
+    def _all_time_entity(self) -> str:
+        """The paired all-time sensor's entity ID: from the registry (follows renames), else the rule."""
+        unique_id = f"{self._entry.entry_id}_{self._all_id}"
+        found = er.async_get(self.hass).async_get_entity_id("sensor", DOMAIN, unique_id) if self.hass else None
+        return found or self.entity_id_of(self._all_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities: AddEntitiesCallback) -> None:

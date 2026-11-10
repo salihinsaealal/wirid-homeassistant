@@ -17,7 +17,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import CONF_PHONE_NAME, CONF_PREFIX, CONF_USER_ID, CONF_WEBHOOK_ID, DOMAIN
+from .const import CONF_ENTITY_IDS, CONF_PHONE_NAME, CONF_PREFIX, CONF_USER_ID, CONF_WEBHOOK_ID, DOMAIN
 from .naming import prefix_for
 from .takeover import find_old, still_provided, take_over
 
@@ -135,9 +135,15 @@ class WiridConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._webhook_id is None:
             self._webhook_id = webhook.async_generate_id()
         if user_input is not None:
+            entity_ids: dict[str, str] = {}
             if self._take_over:
+                old = find_old(self.hass)
+                if still_provided(self.hass, old):
+                    # The YAML block came back since the takeover step: removing live entries now
+                    # would be undone by the template platform. Back to the step, which shows why.
+                    return await self.async_step_takeover()
                 # Only now, as the entry is created: an abandoned flow removes nothing.
-                take_over(self.hass, find_old(self.hass))
+                entity_ids = take_over(self.hass, old)
             return self.async_create_entry(
                 title=self._name,
                 data={
@@ -145,6 +151,7 @@ class WiridConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PREFIX: self._prefix,
                     CONF_PHONE_NAME: self._name,
                     CONF_USER_ID: self._user_id,
+                    CONF_ENTITY_IDS: entity_ids,
                 },
             )
         placeholders = _placeholders(self.hass, self._webhook_id)

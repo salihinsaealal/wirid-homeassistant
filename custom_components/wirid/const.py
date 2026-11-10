@@ -6,6 +6,8 @@ CONF_WEBHOOK_ID = "webhook_id"
 CONF_USER_ID = "user_id"
 CONF_PREFIX = "prefix"
 CONF_PHONE_NAME = "phone_name"
+# {object_id: entity_id} of old YAML sensors this phone took over (their IDs came from their names).
+CONF_ENTITY_IDS = "entity_ids"
 
 # The nine waktu, in the order the app's payload and the old YAML list them.
 WAKTU = ("subuh", "syuruk", "dhuha", "zawal", "zohor", "asar", "maghrib", "isyak", "tahajjud")

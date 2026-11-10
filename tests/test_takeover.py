@@ -12,6 +12,7 @@ OLD = ("today_total", "subhanallah_all_time")
 
 
 def _seed(hass, live: bool = False) -> None:
+    """Old sensors whose names happen to match their unique_ids (fixed stats, SubhanAllah)."""
     reg = er.async_get(hass)
     for oid in OLD:
         e = reg.async_get_or_create("sensor", "template", f"wirid_{oid}", suggested_object_id=f"wirid_{oid}")
@@ -124,6 +125,80 @@ async def test_start_fresh_refused_while_yaml_loaded(hass):
     _seed(hass, live=True)
     result = await _to_takeover(hass)
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {"choice": "start_fresh"})
+    assert result["type"] is FlowResultType.FORM and result["step_id"] == "takeover"
+    assert result["errors"] == {"base": "yaml_still_loaded"}
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    assert len(find_old(hass)) == 2
+    assert all(e.platform == "template" for e in find_old(hass))
+
+
+# The old template platform derived entity IDs from `name: "Wirid <name>"`, not from the unique_id.
+NAMED = {
+    "tahlil_all_time": "wirid_la_ilaha_illallah_all_time",
+    "tahlil_today": "wirid_la_ilaha_illallah_today",
+    "today_total": "wirid_today_total",
+}
+TAHLIL = {**SAMPLE, "dhikr": {**SAMPLE["dhikr"], "tahlil": {"name": "La ilaha illallah", "today": 7, "all_time": 900}}}
+
+
+def _seed_named(hass) -> None:
+    reg = er.async_get(hass)
+    for oid, object_id in NAMED.items():
+        e = reg.async_get_or_create("sensor", "template", f"wirid_{oid}", suggested_object_id=object_id)
+        assert e.entity_id == f"sensor.{object_id}"
+        e.write_unavailable_state(hass)
+
+
+async def test_takeover_keeps_name_derived_ids(hass, hass_client_no_auth):
+    _seed_named(hass)
+    result = await _to_takeover(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"choice": "take_over"})
+    result = await _finish(hass, result)
+    entry = hass.config_entries.async_get_entry(result["result"].entry_id)
+    client = await hass_client_no_auth()
+    resp = await client.post(f"/api/webhook/{result['data']['webhook_id']}", json=TAHLIL)
+    assert resp.status == 200
+    await hass.async_block_till_done()
+
+    def check() -> None:
+        reg = er.async_get(hass)
+        assert find_old(hass) == []
+        for object_id in NAMED.values():
+            assert reg.async_get(f"sensor.{object_id}").platform == DOMAIN
+        assert reg.async_get("sensor.wirid_tahlil_today") is None
+        assert reg.async_get("sensor.wirid_tahlil_all_time") is None
+        assert hass.states.get("sensor.wirid_tahlil_today") is None
+        assert reg.async_get("sensor.wirid_la_ilaha_illallah_all_time_2") is None
+        today = hass.states.get("sensor.wirid_la_ilaha_illallah_today")
+        assert today.state == "7"
+        assert today.attributes["all_time_entity"] == "sensor.wirid_la_ilaha_illallah_all_time"
+        assert hass.states.get("sensor.wirid_la_ilaha_illallah_all_time").state == "900"
+        assert hass.states.get("sensor.wirid_today_total").state == "398"
+        # A dhikr the old YAML never had keeps the plain slug ID.
+        assert hass.states.get("sensor.wirid_subhanallah_today").attributes["all_time_entity"] == (
+            "sensor.wirid_subhanallah_all_time"
+        )
+
+    check()
+    # The mapping lives in the entry data, so it survives a reload, and a fresh registry.
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    reg = er.async_get(hass)
+    for e in list(er.async_entries_for_config_entry(reg, entry.entry_id)):
+        reg.async_remove(e.entity_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    check()
+
+
+async def test_done_rechecks_yaml_loaded(hass):
+    _seed(hass)
+    result = await _to_takeover(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"choice": "take_over"})
+    assert result["step_id"] == "done"
+    # The YAML block was reloaded before the final submit.
+    hass.states.async_set("sensor.wirid_today_total", "5")
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM and result["step_id"] == "takeover"
     assert result["errors"] == {"base": "yaml_still_loaded"}
     assert hass.config_entries.async_entries(DOMAIN) == []

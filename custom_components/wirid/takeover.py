@@ -1,9 +1,10 @@
 """Taking over the entity IDs of the owner's old YAML template sensors.
 
-The old template sensors had `unique_id: wirid_<object_id>`, so the entity registry still holds
-`sensor.wirid_<object_id>` for the `template` platform after the YAML block is removed. Removing
-those registry entries frees the IDs for this integration, and long-term statistics (keyed by
-entity ID) carry on.
+The old template sensors had `unique_id: wirid_<object_id>`, but the template platform derived each
+entity ID from the sensor's name ("Wirid Allahu Akbar all time" → `sensor.wirid_allahu_akbar_all_time`
+for unique_id `wirid_allahuakbar_all_time`), and the owner may have renamed some. So the takeover
+records each old entry's actual entity ID by object id, then removes the entries; the integration's
+entities reuse those exact IDs, and long-term statistics (keyed by entity ID) carry on.
 """
 
 from __future__ import annotations
@@ -13,11 +14,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
+OLD_PREFIX = "wirid_"
+
+
 def find_old(hass: HomeAssistant) -> list[er.RegistryEntry]:
     """Registry entries of the old YAML template sensors."""
     return [
         e for e in er.async_get(hass).entities.values()
-        if e.platform == "template" and e.domain == "sensor" and (e.unique_id or "").startswith("wirid_")
+        if e.platform == "template" and e.domain == "sensor" and (e.unique_id or "").startswith(OLD_PREFIX)
     ]
 
 
@@ -30,9 +34,16 @@ def still_provided(hass: HomeAssistant, entries: list[er.RegistryEntry]) -> bool
     return False
 
 
-def take_over(hass: HomeAssistant, entries: list[er.RegistryEntry]) -> None:
-    """Remove the old registry entries so their entity IDs are free."""
+def entity_id_map(entries: list[er.RegistryEntry]) -> dict[str, str]:
+    """{object_id: entity_id} of the old entries (unique_id `wirid_<object_id>`)."""
+    return {e.unique_id.removeprefix(OLD_PREFIX): e.entity_id for e in entries}
+
+
+def take_over(hass: HomeAssistant, entries: list[er.RegistryEntry]) -> dict[str, str]:
+    """Record the old entity IDs, then remove their registry entries so the IDs are free."""
+    taken = entity_id_map(entries)
     reg = er.async_get(hass)
     for e in entries:
         if reg.async_get(e.entity_id) is not None:
             reg.async_remove(e.entity_id)
+    return taken

@@ -52,3 +52,8 @@ FIXED: tuple[tuple[str, str], ...] = (
 def dhikr_ids(slug: str) -> tuple[str, str]:
     """Object ids of a dhikr's two sensors."""
     return f"{slug}_today", f"{slug}_all_time"
+
+
+def entity_id_for(prefix: str, object_id: str, taken_over: dict[str, str] | None) -> str:
+    """A sensor's entity ID: the old YAML sensor's exact ID when taken over, else prefix + object id."""
+    return (taken_over or {}).get(object_id) or f"sensor.{prefix}{object_id}"

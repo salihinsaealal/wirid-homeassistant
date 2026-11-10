@@ -7,7 +7,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_PHONE_NAME, CONF_PREFIX, DOMAIN, signal_update
+from .const import CONF_ENTITY_IDS, CONF_PHONE_NAME, CONF_PREFIX, DOMAIN, signal_update
+from .naming import entity_id_for
 
 
 class WiridEntity(Entity):
@@ -20,7 +21,11 @@ class WiridEntity(Entity):
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{object_id}"
         self._attr_name = name
-        self.entity_id = f"sensor.{entry.data[CONF_PREFIX]}{object_id}"
+        self.entity_id = self.entity_id_of(object_id)
+
+    def entity_id_of(self, object_id: str) -> str:
+        """The entity ID this phone gives an object id (a taken-over old ID when there is one)."""
+        return entity_id_for(self._entry.data[CONF_PREFIX], object_id, self._entry.data.get(CONF_ENTITY_IDS))
 
     @property
     def snapshot(self):

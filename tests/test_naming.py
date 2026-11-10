@@ -1,4 +1,4 @@
-from custom_components.wirid.naming import FIXED, dhikr_ids, phone_slug, prefix_for
+from custom_components.wirid.naming import FIXED, dhikr_ids, entity_id_for, phone_slug, prefix_for
 
 
 def test_first_phone_gets_plain_prefix(): assert prefix_for("Salihin's phone", set()) == "wirid_"
@@ -15,3 +15,10 @@ def test_fixed_ids_match_yaml():
     assert ids[:6] == ["today_total", "today_goal", "today_goal_percent", "today_tier", "today_sessions", "today_minutes"]
     assert "today_tahajjud" in ids and ids[-1] == "last_sent" and len(ids) == 6 + 9 + 6 + 3 + 1 + 1
     assert dict(FIXED)["today_subuh"] == "Today Subuh" and dict(FIXED)["week_change"] == "Week change"
+
+
+def test_entity_id_for():
+    taken = {"tahlil_today": "sensor.wirid_la_ilaha_illallah_today"}
+    assert entity_id_for("wirid_", "tahlil_today", taken) == "sensor.wirid_la_ilaha_illallah_today"
+    assert entity_id_for("wirid_", "tahlil_all_time", taken) == "sensor.wirid_tahlil_all_time"
+    assert entity_id_for("wirid_aisyah_", "today_total", None) == "sensor.wirid_aisyah_today_total"
