@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_USER_ID, CONF_PREFIX, DOMAIN, WAKTU, signal_update
+from .const import CONF_PREFIX, CONF_USER_ID, DOMAIN, WAKTU, signal_update
 from .entity import WiridEntity
 from .naming import FIXED, dhikr_ids
 from .payload import Dhikr, Snapshot

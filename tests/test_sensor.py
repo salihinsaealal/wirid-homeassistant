@@ -114,3 +114,18 @@ async def test_second_phone_prefix(hass, hass_client_no_auth):
     await _post(hass, await hass_client_no_auth(), SAMPLE, wid="wid2")
     assert hass.states.get("sensor.wirid_aisyah_today_total").state == "398"
     assert hass.states.get("sensor.wirid_today_total").state == "unknown"
+
+
+async def test_dropped_dhikr_survives_restart(hass, hass_client_no_auth):
+    entry = await _setup(hass)
+    client = await hass_client_no_auth()
+    await _post(hass, client, SAMPLE)
+    data = copy.deepcopy(SAMPLE)
+    del data["dhikr"]["subhanallah"]
+    await _post(hass, client, data)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.wirid_subhanallah_all_time").state == "4000"
+    assert hass.states.get("sensor.wirid_subhanallah_today").state == "0"

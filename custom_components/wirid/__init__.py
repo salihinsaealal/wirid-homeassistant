@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 
 from aiohttp import web
@@ -32,6 +32,15 @@ class WiridData:
 type WiridConfigEntry = ConfigEntry[WiridData]
 
 
+def _keep_dropped_dhikr(old: Snapshot | None, new: Snapshot) -> Snapshot:
+    """Carry dhikr the new payload dropped (today 0, last all_time) so they survive a restart."""
+    if old is None:
+        return new
+    present = {d.slug for d in new.dhikr}
+    kept = tuple(replace(d, today=0) for d in old.dhikr if d.slug not in present)
+    return replace(new, dhikr=new.dhikr + kept) if kept else new
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> bool:
     """Set up a phone: load its last snapshot and open its webhook."""
     store = SnapshotStore(hass, entry.entry_id)
@@ -43,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> boo
         except (ValueError, PayloadError, TypeError, KeyError, AttributeError) as err:
             _LOGGER.warning("Ignoring bad Wirid payload for %s: %s", entry.title, type(err).__name__)
             return web.Response(status=200)
+        snapshot = _keep_dropped_dhikr(entry.runtime_data.snapshot, snapshot)
         await entry.runtime_data.store.save(snapshot)
         entry.runtime_data.snapshot = snapshot
         async_dispatcher_send(hass, signal_update(entry.entry_id))
