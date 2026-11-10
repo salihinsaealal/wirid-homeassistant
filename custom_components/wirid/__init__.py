@@ -58,17 +58,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> boo
         async_dispatcher_send(hass, signal_update(entry.entry_id))
         return web.Response(status=200)
 
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
     webhook.async_register(
-        hass, DOMAIN, entry.title, entry.data[CONF_WEBHOOK_ID], handle_webhook,
+        hass, DOMAIN, entry.title, webhook_id, handle_webhook,
         allowed_methods={"POST"}, local_only=False,
     )
+    # Unregister the ID registered here, not entry.data's: "new address" changes data before the reload.
+    entry.async_on_unload(lambda: webhook.async_unregister(hass, webhook_id))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> bool:
     """Unload a phone."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unloaded:
-        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return unloaded
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

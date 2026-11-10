@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add a phone",
+        "description": "Name the phone that runs Wirid, e.g. the owner's name. Each phone gets its own device and its own address.",
+        "data": {
+          "phone_name": "Phone name"
+        }
+      },
+      "person": {
+        "title": "Who uses this phone?",
+        "description": "Link {phone} to a person, so the shared Wirid dashboard shows them their own stats. You can change this later.",
+        "data": {
+          "user_id": "Person"
+        }
+      },
+      "takeover": {
+        "title": "Take over the old sensors",
+        "description": "Found {count} Wirid sensors from the earlier YAML setup. Take them over to keep their history?\n\n**Take over** gives this phone their entity IDs (for example `sensor.wirid_today_total`), so their history continues.\n\n**Start fresh** leaves the old sensors alone. This phone's sensors then get IDs ending in `_2` (for example `sensor.wirid_today_total_2`), and their history starts empty.",
+        "data": {
+          "choice": "What to do"
+        }
+      },
+      "done": {
+        "title": "Phone added",
+        "description": "Copy this address into Wirid on the phone: Settings → Home Assistant → paste it, then turn sending on.\n\n`{url}`\n\nKeep it private: anyone with the address can send stats to this phone's sensors. You can show it again, or replace it, from this integration's options.",
+        "data": {
+          "url": "Address (select and copy)"
+        }
+      }
+    },
+    "error": {
+      "name_required": "Enter a name for the phone.",
+      "yaml_still_loaded": "The old Wirid template sensors are still loaded. Remove the Wirid block from `configuration.yaml`, restart Home Assistant, then add the phone again. Or choose Start fresh."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Wirid phone",
+        "menu_options": {
+          "person": "Change who uses this phone",
+          "address": "Show the address",
+          "new_address": "Make a new address"
+        }
+      },
+      "person": {
+        "title": "Who uses this phone?",
+        "description": "Link {phone} to a person. The device and its entity IDs stay the same.",
+        "data": {
+          "user_id": "Person"
+        }
+      },
+      "address": {
+        "title": "Phone address",
+        "description": "Copy this address into Wirid on the phone: Settings → Home Assistant.\n\n`{url}`",
+        "data": {
+          "url": "Address (select and copy)"
+        }
+      },
+      "new_address": {
+        "title": "Make a new address",
+        "description": "Give {phone} a new address, for a lost or shared phone. The old address stops working at once, so paste the new one into Wirid afterwards. Its sensors and history stay."
+      }
+    }
+  },
+  "selector": {
+    "person": {
+      "options": {
+        "nobody": "Nobody"
+      }
+    },
+    "takeover": {
+      "options": {
+        "take_over": "Take over (keep their history)",
+        "start_fresh": "Start fresh (new IDs ending in _2)"
+      }
+    }
+  }
+}

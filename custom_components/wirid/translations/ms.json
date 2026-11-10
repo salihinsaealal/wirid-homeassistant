@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tambah telefon",
+        "description": "Namakan telefon yang menjalankan Wirid, contohnya nama pemiliknya. Setiap telefon mendapat peranti dan alamatnya sendiri.",
+        "data": {
+          "phone_name": "Nama telefon"
+        }
+      },
+      "person": {
+        "title": "Siapa yang menggunakan telefon ini?",
+        "description": "Pautkan {phone} kepada seseorang, supaya papan pemuka Wirid yang dikongsi menunjukkan statistik mereka sendiri. Boleh ditukar kemudian.",
+        "data": {
+          "user_id": "Pengguna"
+        }
+      },
+      "takeover": {
+        "title": "Ambil alih sensor lama",
+        "description": "Ditemui {count} sensor Wirid daripada tetapan YAML terdahulu. Ambil alih untuk mengekalkan sejarahnya?\n\n**Ambil alih** memberikan ID entiti sensor itu kepada telefon ini (contohnya `sensor.wirid_today_total`), jadi sejarahnya bersambung.\n\n**Mula baharu** membiarkan sensor lama. Sensor telefon ini akan mendapat ID berakhir dengan `_2` (contohnya `sensor.wirid_today_total_2`), dan sejarahnya bermula kosong.",
+        "data": {
+          "choice": "Pilihan"
+        }
+      },
+      "done": {
+        "title": "Telefon ditambah",
+        "description": "Salin alamat ini ke dalam Wirid di telefon: Tetapan → Home Assistant → tampal, kemudian hidupkan penghantaran.\n\n`{url}`\n\nRahsiakan alamat ini: sesiapa yang memilikinya boleh menghantar statistik ke sensor telefon ini. Anda boleh memaparkannya semula, atau menggantikannya, melalui pilihan integrasi ini.",
+        "data": {
+          "url": "Alamat (pilih dan salin)"
+        }
+      }
+    },
+    "error": {
+      "name_required": "Masukkan nama telefon.",
+      "yaml_still_loaded": "Sensor templat Wirid yang lama masih dimuatkan. Buang blok Wirid daripada `configuration.yaml`, mulakan semula Home Assistant, kemudian tambah telefon sekali lagi. Atau pilih Mula baharu."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Telefon Wirid",
+        "menu_options": {
+          "person": "Tukar pengguna telefon ini",
+          "address": "Papar alamat",
+          "new_address": "Buat alamat baharu"
+        }
+      },
+      "person": {
+        "title": "Siapa yang menggunakan telefon ini?",
+        "description": "Pautkan {phone} kepada seseorang. Peranti dan ID entitinya kekal sama.",
+        "data": {
+          "user_id": "Pengguna"
+        }
+      },
+      "address": {
+        "title": "Alamat telefon",
+        "description": "Salin alamat ini ke dalam Wirid di telefon: Tetapan → Home Assistant.\n\n`{url}`",
+        "data": {
+          "url": "Alamat (pilih dan salin)"
+        }
+      },
+      "new_address": {
+        "title": "Buat alamat baharu",
+        "description": "Beri {phone} alamat baharu, untuk telefon yang hilang atau dikongsi. Alamat lama terus tidak berfungsi, jadi tampal alamat baharu ke dalam Wirid selepas ini. Sensor dan sejarahnya kekal."
+      }
+    }
+  },
+  "selector": {
+    "person": {
+      "options": {
+        "nobody": "Tiada sesiapa"
+      }
+    },
+    "takeover": {
+      "options": {
+        "take_over": "Ambil alih (kekalkan sejarah)",
+        "start_fresh": "Mula baharu (ID baharu berakhir dengan _2)"
+      }
+    }
+  }
+}
