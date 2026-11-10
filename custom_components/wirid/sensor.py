@@ -80,6 +80,8 @@ class FixedSensor(WiridEntity, SensorEntity):
                 "wirid_prefix": self._entry.data[CONF_PREFIX],
                 "payload_version": snap.version,
                 "app_version": snap.app,
+                # Dates of the dhikr sensors' `days` (last 14 days, oldest first) for the dashboard.
+                "days": list(snap.days) if snap.days else None,
             }
             return
         value = SPECS[oid].value(snap)
@@ -122,6 +124,8 @@ class DhikrSensor(WiridEntity, SensorEntity):
                 "slug": d.slug,
                 "wirid_prefix": self._entry.data[CONF_PREFIX],
                 "all_time_entity": self._all_time_entity(),
+                # Counts per day, matching last_sent's `days`; None while the dhikr is absent.
+                "days": list(current.days) if current is not None and current.days else None,
             }
 
     def _all_time_entity(self) -> str:

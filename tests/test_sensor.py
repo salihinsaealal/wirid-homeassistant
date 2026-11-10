@@ -130,3 +130,20 @@ async def test_dropped_dhikr_survives_restart(hass, hass_client_no_auth):
     await hass.async_block_till_done()
     assert hass.states.get("sensor.wirid_subhanallah_all_time").state == "4000"
     assert hass.states.get("sensor.wirid_subhanallah_today").state == "0"
+
+
+async def test_last_fourteen_days_attributes(hass, hass_client_no_auth):
+    entry = await _setup(hass)
+    data = copy.deepcopy(SAMPLE)
+    data["days"] = ["2026-11-09", "2026-11-10"]
+    data["dhikr"]["subhanallah"]["days"] = [12, 33]
+    client = await hass_client_no_auth()
+    await client.post(f"/api/webhook/{entry.data['webhook_id']}", json=data)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.wirid_last_sent").attributes["days"] == ["2026-11-09", "2026-11-10"]
+    assert hass.states.get("sensor.wirid_subhanallah_today").attributes["days"] == [12, 33]
+    # A dhikr dropped from the next payload has no days (the card shows zeros), and today 0.
+    del data["dhikr"]["subhanallah"]
+    await client.post(f"/api/webhook/{entry.data['webhook_id']}", json=data)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.wirid_subhanallah_today").attributes["days"] is None

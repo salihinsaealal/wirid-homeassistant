@@ -10,7 +10,6 @@
 # card is display:none. button-card cannot share a function between pasted cards, so the small
 # resolver at the top of each card is repeated byte for byte (it defines `P`, the prefix).
 #
-# The statistics graph (card 5) cannot be templated; see the note above it.
 # Colours follow the app: emerald up to the daily goal, gold past it, purple past twice; each dhikr
 # keeps its app colour; prayer times are gold; up emerald / down rose.
 
@@ -222,33 +221,67 @@
                 </div>`;
       ]]]
 
-# ---------- 5. Last 14 days per dhikr (HA long-term statistics) ----------
-# A statistics-graph cannot use templates, so it is a per-person copy. Show it only to one user:
-#   1. Settings > People: open the person, copy their user id (or Settings > People > Users).
-#   2. Replace <USER_ID> below with it.
-#   3. Replace the entities with that phone's *_all_time sensors. Copy the real entity ids from
-#      the phone's device page (Settings > Devices > the phone): a phone that took over the old
-#      YAML sensors keeps their old names (e.g. sensor.wirid_allahu_akbar_all_time), so don't
-#      guess. The ids below are the usual ones for a first phone (prefix wirid_ + dhikr key; a
-#      second phone has wirid_aisyah_ and so on). Remove or add lines for the dhikr that person uses.
-#   4. For another person, duplicate this whole card with their user id and their prefix.
-- type: statistics-graph
-  title: Last 14 days
-  chart_type: bar
-  period: day
-  days_to_show: 14
-  stat_types: [change]
-  visibility:
-    - condition: user
-      users: ["<USER_ID>"]
-  entities:
-    - { entity: sensor.wirid_subhanallah_all_time,   name: SubhanAllah }
-    - { entity: sensor.wirid_alhamdulillah_all_time, name: Alhamdulillah }
-    - { entity: sensor.wirid_allahuakbar_all_time,   name: Allahu Akbar }
-    - { entity: sensor.wirid_istighfar_all_time,     name: Astaghfirullah }
-    - { entity: sensor.wirid_selawat_all_time,       name: Selawat }
-    - { entity: sensor.wirid_tahlil_all_time,        name: Tahlil }
-    - { entity: sensor.wirid_hawqalah_all_time,      name: Hawqalah }
+# ---------- 5. Last 14 days: stacked by dhikr ----------
+# Follows the viewer like the other cards (no user id to edit). The phone sends the last 14 days per
+# dhikr (Wirid app 0.3.0+ with integration 0.2.0+); an older app shows a short note instead.
+- type: custom:button-card
+  triggers_update: all
+  show_name: false
+  show_icon: false
+  show_state: false
+  tap_action: { action: none }
+  styles:
+    card:
+      - display: >
+          [[[ const __me = Object.values(states).filter(s => s.entity_id.endsWith('last_sent') && s.attributes && s.attributes.wirid_user_id && s.attributes.wirid_user_id === user.id).sort((a, b) => (Date.parse(b.state) || 0) - (Date.parse(a.state) || 0))[0]; const P = __me ? __me.attributes.wirid_prefix : null; return P ? 'block' : 'none'; ]]]
+      - padding: 16px 18px
+      - border-radius: 24px
+    grid:
+      - grid-template-areas: '"main"'
+  custom_fields:
+    main: >
+      [[[
+        const __me = Object.values(states).filter(s => s.entity_id.endsWith('last_sent') && s.attributes && s.attributes.wirid_user_id && s.attributes.wirid_user_id === user.id).sort((a, b) => (Date.parse(b.state) || 0) - (Date.parse(a.state) || 0))[0]; const P = __me ? __me.attributes.wirid_prefix : null; if (!P) return '';
+        const dates = (__me.attributes.days || []);
+        const head = `<div style="font-size:15px;font-weight:700;color:var(--primary-text-color)">Last 14 days</div>`;
+        if (!dates.length) return head + `<div style="font-size:12px;color:var(--secondary-text-color);margin-top:6px">Update the Wirid app on the phone to see this chart.</div>`;
+        const owner = (__me.attributes.friendly_name || '').replace(/ Last sent$/, '');
+        const list = Object.values(states)
+          .filter(s => s.entity_id.endsWith('_today') && s.attributes && s.attributes.slug && s.attributes.wirid_prefix === P)
+          .map(s => {
+            const a = s.attributes;
+            let name = (a.friendly_name || a.slug).replace(/ today$/, '');
+            if (owner && name.startsWith(owner + ' ')) name = name.slice(owner.length + 1);
+            const c = /^#[0-9a-fA-F]{6}$/.test(a.color || '') ? a.color : '#9AA4B1';
+            const days = dates.map((_, i) => Array.isArray(a.days) ? (Number(a.days[i]) || 0) : 0);
+            return { name, c, days, sum: days.reduce((x, y) => x + y, 0) };
+          })
+          .filter(d => d.sum > 0)
+          .sort((a, b) => b.sum - a.sum);
+        const totals = dates.map((_, i) => list.reduce((t, d) => t + d.days[i], 0));
+        const all = totals.reduce((x, y) => x + y, 0);
+        const max = Math.max(1, ...totals);
+        const H = 110;
+        const cols = dates.map((ds, i) => {
+          const dt = new Date(ds + 'T00:00:00');
+          const last = i === dates.length - 1;
+          const segs = list.filter(d => d.days[i] > 0).map(d =>
+            `<div title="${d.name}: ${d.days[i]}" style="height:${(d.days[i] / max * H).toFixed(1)}px;background:${d.c}"></div>`).join('');
+          return `<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div style="font-size:9px;color:var(--secondary-text-color);height:11px;white-space:nowrap">${totals[i] ? totals[i].toLocaleString() : ''}</div>
+              <div style="height:${H}px;width:100%;display:flex;align-items:flex-end;justify-content:center">
+                <div style="width:72%;max-width:18px;display:flex;flex-direction:column-reverse;border-radius:5px;overflow:hidden;${totals[i] ? '' : 'height:3px;background:rgba(255,255,255,0.08)'}">${segs}</div>
+              </div>
+              <div style="font-size:10px;line-height:1.1;text-align:center;color:${last ? 'var(--primary-text-color)' : 'var(--secondary-text-color)'};font-weight:${last ? 700 : 500}">${'SMTWTFS'[dt.getDay()]}<br>${dt.getDate()}</div>
+            </div>`;
+        }).join('');
+        const legend = list.map(d => `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--secondary-text-color)">
+            <span style="width:9px;height:9px;border-radius:50%;background:${d.c}"></span>${d.name} <b style="color:var(--primary-text-color)">${d.sum.toLocaleString()}</b></span>`).join('');
+        return `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">${head}
+                  <span style="font-size:12px;color:var(--secondary-text-color)">${all.toLocaleString()} · ${Math.round(all / dates.length).toLocaleString()}/day</span></div>
+                <div style="display:flex;gap:2px">${cols}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px">${legend || '<span style="font-size:11px;color:var(--secondary-text-color)">No dhikr in these 14 days yet</span>'}</div>`;
+      ]]]
 
 # ---------- 6. Footer: active days, last session, last sent ----------
 - type: custom:button-card

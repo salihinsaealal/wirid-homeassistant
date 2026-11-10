@@ -60,17 +60,11 @@ Only `*_all_time` are totals for long-term statistics, so Home Assistant can gra
 
 ## Dashboard
 
-`dashboard/wirid-cards.yaml` holds the colourful cards (today's ring, each dhikr, waktu, periods, consistency). They need [button-card](https://github.com/custom-cards/button-card) (Marketplace / HACS).
+`dashboard/wirid-cards.yaml` holds the colourful cards (today's ring, each dhikr, waktu, periods, last 14 days, consistency). They need [button-card](https://github.com/custom-cards/button-card) (Marketplace / HACS).
 
 Paste the items under a view's `cards:`. Every card finds the phone linked to whoever is looking: you see your stats, your family see theirs, and someone with no phone sees nothing.
 
-### The statistics graph, per person
-
-The statistics graph card can't follow the viewer by itself, so it is one copy per person:
-
-1. Find the person's user ID: Settings → People → Users → open the user (the ID is in the address bar), or Developer tools → States → `sensor.<prefix>last_sent` → attribute `wirid_user_id`.
-2. Copy the `statistics-graph` card from the file, replace `<USER_ID>` with that ID, and replace the example entities with that phone's real `*_all_time` entity IDs, copied from its device page (Settings → Devices). A phone that took over the old YAML sensors keeps their old names (for example `sensor.wirid_allahu_akbar_all_time` rather than `sensor.wirid_allahuakbar_all_time`).
-3. Repeat for each person with a phone.
+The "Last 14 days" card draws each day as a bar stacked by dhikr, in the app's colours. It follows the viewer like the others, so there is nothing to edit; it needs Wirid app 0.3.0 or newer on the phone.
 
 ## Payload (for developers)
 
@@ -80,13 +74,14 @@ The phone POSTs one JSON snapshot to `/api/webhook/<id>`:
 {"v":1,"sent":"2026-11-10T12:42:21+08:00","app":"0.4.0",
  "today":{"total":398,"goal":1000,"goal_percent":39,"tier":"emerald","sessions":13,"minutes":22,
           "waktu":{"subuh":10,"dhuha":388}},
- "dhikr":{"subhanallah":{"name":"SubhanAllah","today":33,"all_time":4000,"color":"#34E3A0","mono":"SA"}},
+ "dhikr":{"subhanallah":{"name":"SubhanAllah","today":33,"all_time":4000,"color":"#34E3A0","mono":"SA","days":[0,…,33]}},
  "week":{"total":2000,"change":-12},"month":{"total":9000,"change":null},"year":{"total":40000,"change":5},
  "streak":{"current":1,"best":9,"active_days":40},
- "last_session":{"routine":"Istighfar ×100","count":60,"ended":"2026-11-10T12:37:18+08:00"}}
+ "last_session":{"routine":"Istighfar ×100","count":60,"ended":"2026-11-10T12:37:18+08:00"},
+ "days":["2026-10-28","…","2026-11-10"]}
 ```
 
-`app`, `color` and `mono` are optional (older app versions don't send them). Unknown fields and higher `v` are tolerated.
+`app`, `color`, `mono` and `days` (the last 14 days: dates at the top level, counts per dhikr, oldest first) are optional; older app versions don't send them. Unknown fields and higher `v` are tolerated.
 
 ## Privacy
 

@@ -62,3 +62,17 @@ def test_rejects_non_snapshot(data):
 
 def test_round_trip():
     assert parse(to_dict(parse(SAMPLE))) == parse(SAMPLE)
+
+
+def test_last_fourteen_days():
+    data = {**SAMPLE, "days": ["2026-11-08", "2026-11-09", "bad", 5, "2026-11-10"],
+            "dhikr": {"selawat": {"name": "Selawat", "today": 1, "all_time": 9, "days": [0, 4, "x", 1]}}}
+    s = parse(data)
+    assert s.days == ("2026-11-08", "2026-11-09", "2026-11-10")
+    assert s.dhikr[0].days == (0, 4, 0, 1)
+    assert parse(to_dict(s)) == s
+
+
+def test_days_absent_is_none():
+    s = parse(SAMPLE)
+    assert s.days is None and all(d.days is None for d in s.dhikr)

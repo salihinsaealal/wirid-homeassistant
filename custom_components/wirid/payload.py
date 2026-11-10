@@ -28,6 +28,7 @@ class Dhikr:
     all_time: int
     color: str | None
     mono: str | None
+    days: tuple[int, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,23 @@ class Snapshot:
     streak_best: int
     active_days: int
     last_session: LastSession | None
+    days: tuple[str, ...] | None = None
+
+
+_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_MAX_DAYS = 31
+
+
+def _days_counts(value: Any) -> tuple[int, ...] | None:
+    """Per-day counts (oldest first); None when absent or not a list."""
+    return tuple(_int(v) for v in value[:_MAX_DAYS]) if isinstance(value, list) else None
+
+
+def _days_dates(value: Any) -> tuple[str, ...] | None:
+    """The dates of the per-day counts (ISO, oldest first); entries that aren't dates are skipped."""
+    if not isinstance(value, list):
+        return None
+    return tuple(v for v in value if isinstance(v, str) and _DATE.match(v))[:_MAX_DAYS]
 
 
 def _int(value: Any) -> int:
@@ -114,6 +132,7 @@ def parse(data: object) -> Snapshot:
                 all_time=_int(d.get("all_time")),
                 color=color if isinstance(color, str) and _COLOR.match(color) else None,
                 mono=mono if isinstance(mono, str) and mono else None,
+                days=_days_counts(d.get("days")),
             )
         )
     streak = _obj(data.get("streak"))
@@ -141,6 +160,7 @@ def parse(data: object) -> Snapshot:
         streak_best=_int(streak.get("best")),
         active_days=_int(streak.get("active_days")),
         last_session=last_session,
+        days=_days_dates(data.get("days")),
     )
 
 
@@ -153,6 +173,8 @@ def to_dict(s: Snapshot) -> dict:
             item["color"] = d.color
         if d.mono is not None:
             item["mono"] = d.mono
+        if d.days is not None:
+            item["days"] = list(d.days)
         dhikr[d.slug] = item
     out: dict[str, Any] = {
         "v": s.version,
@@ -172,4 +194,6 @@ def to_dict(s: Snapshot) -> dict:
     }
     if s.app is not None:
         out["app"] = s.app
+    if s.days is not None:
+        out["days"] = list(s.days)
     return out

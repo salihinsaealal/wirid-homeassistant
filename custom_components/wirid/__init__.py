@@ -37,7 +37,7 @@ def _keep_dropped_dhikr(old: Snapshot | None, new: Snapshot) -> Snapshot:
     if old is None:
         return new
     present = {d.slug for d in new.dhikr}
-    kept = tuple(replace(d, today=0) for d in old.dhikr if d.slug not in present)
+    kept = tuple(replace(d, today=0, days=None) for d in old.dhikr if d.slug not in present)
     return replace(new, dhikr=new.dhikr + kept) if kept else new
 
 
