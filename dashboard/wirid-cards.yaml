@@ -140,9 +140,10 @@
         const top = counted.length
           ? `<div style="display:flex;flex-direction:column;gap:10px">${rows(counted)}</div>`
           : `<div style="font-size:13px;color:var(--secondary-text-color)">No dhikr yet today</div>`;
+        const open = typeof window !== 'undefined' && window.wiridShowAll ? ' open' : '';
         const more = !rest.length ? '' : `
-          <style>.wd-all summary{list-style:none}.wd-all summary::-webkit-details-marker{display:none}.wd-chev{display:inline-block;transition:transform .15s}.wd-all[open] .wd-chev{transform:rotate(90deg)}</style>
-          <details class="wd-all">
+          <style>.wd-all{pointer-events:auto}.wd-all summary{list-style:none}.wd-all summary::-webkit-details-marker{display:none}.wd-chev{display:inline-block;transition:transform .15s}.wd-all[open] .wd-chev{transform:rotate(90deg)}</style>
+          <details class="wd-all"${open} ontoggle="window.wiridShowAll = this.open" onclick="event.stopPropagation()" ontouchend="event.stopPropagation()" onkeydown="event.stopPropagation()">
             <summary style="font-size:13px;color:var(--secondary-text-color);cursor:pointer;margin-top:10px"><span class="wd-chev">▸</span> Show all · ${rest.length} more</summary>
             <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">${rows(rest)}</div>
           </details>`;
