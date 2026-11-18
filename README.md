@@ -52,7 +52,7 @@ Each phone's entities start with its prefix: `sensor.wirid_` for the first phone
 | Entity | Meaning | Unit |
 |---|---|---|
 | `today_total`, `today_goal`, `today_goal_percent` | Today and your daily goal | dhikr, % |
-| `today_tier` | `emerald` up to the goal, `gold` past it, `purple` past twice | |
+| `today_tier` | `emerald` up to the goal, then one per extra lap: `gold`, `purple`, `pink`, `silver` (5th lap on) | |
 | `today_sessions`, `today_minutes` | Sessions and time today | sessions, min |
 | `today_subuh` … `today_tahajjud` | Today by waktu (9) | dhikr |
 | `<dhikr>_today`, `<dhikr>_all_time` | Each dhikr you've used (`_today` carries `all_time_entity`, its pair's ID) | dhikr |

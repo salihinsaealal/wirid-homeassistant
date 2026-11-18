@@ -10,7 +10,7 @@
 # card is display:none. button-card cannot share a function between pasted cards, so the small
 # resolver at the top of each card is repeated byte for byte (it defines `P`, the prefix).
 #
-# Colours follow the app: emerald up to the daily goal, gold past it, purple past twice; each dhikr
+# Colours follow the app: emerald up to the daily goal, then one colour per extra lap: gold, purple, pink, silver; each dhikr
 # keeps its app colour; prayer times are gold; up emerald / down rose.
 
 # ---------- 1. Today: tier ring + chips ----------
@@ -30,7 +30,7 @@
           [[[ const __me = Object.values(states).filter(s => s.entity_id.endsWith('last_sent') && s.attributes && s.attributes.wirid_user_id && s.attributes.wirid_user_id === user.id).sort((a, b) => (Date.parse(b.state) || 0) - (Date.parse(a.state) || 0))[0]; const P = __me ? __me.attributes.wirid_prefix : null; if (!P) return '';
               const n = s => Number((states[s] || {}).state) || 0;
               const t = n(`sensor.${P}today_total`), g = n(`sensor.${P}today_goal`);
-              const c = g > 0 && t > 2 * g ? '185,140,255' : g > 0 && t > g ? '255,216,77' : '52,227,160';
+              const c = ['52,227,160','255,216,77','185,140,255','255,111,216','228,236,247'][g > 0 && t > g ? Math.min(Math.ceil(t / g), 5) - 1 : 0];
               return `radial-gradient(120% 140% at 0% 0%, rgba(${c},0.22) 0%, rgba(${c},0.04) 55%, var(--ha-card-background, var(--card-background-color)) 100%)`; ]]]
     grid:
       - grid-template-areas: '"main"'
@@ -39,16 +39,16 @@
       [[[
         const __me = Object.values(states).filter(s => s.entity_id.endsWith('last_sent') && s.attributes && s.attributes.wirid_user_id && s.attributes.wirid_user_id === user.id).sort((a, b) => (Date.parse(b.state) || 0) - (Date.parse(a.state) || 0))[0]; const P = __me ? __me.attributes.wirid_prefix : null; if (!P) return '';
         const n = s => Number((states[s] || {}).state) || 0;
-        const E = '#34E3A0', G = '#FFD84D', P3 = '#B98CFF';
+        const T = ['#34E3A0', '#FFD84D', '#B98CFF', '#FF6FD8', '#E4ECF7'], tier = l => T[Math.min(l, 5) - 1];
         const total = n(`sensor.${P}today_total`), goal = n(`sensor.${P}today_goal`);
         let lap = 1, frac = 0;
         if (goal > 0) {
           if (total <= goal) frac = total / goal;
           else { lap = Math.ceil(total / goal); frac = (total - (lap - 1) * goal) / goal; }
         }
-        const col = lap === 1 ? E : lap === 2 ? G : P3;
-        const under = lap === 1 ? null : lap === 2 ? E : lap === 3 ? G : P3;
-        const tierName = lap === 1 ? 'On the way' : lap === 2 ? 'Gold' : 'Purple';
+        const col = tier(lap);
+        const under = lap === 1 ? null : tier(lap - 1);
+        const tierName = ['On the way', 'Gold', 'Purple', 'Pink', 'Silver'][Math.min(lap, 5) - 1];
         const r = 50, C = 2 * Math.PI * r, dash = (C * Math.min(frac, 1)).toFixed(1);
         const pct = n(`sensor.${P}today_goal_percent`);
         const chip = (icon, text, c) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:${c}22;color:${c};font-size:12px;font-weight:600">
