@@ -1,8 +1,8 @@
 {
   "domain": "wirid",
   "name": "Wirid",
-  "codeowners": ["@salihinsaealal"],
   "categories": ["health_wellbeing"],
+  "codeowners": ["@salihinsaealal"],
   "config_flow": true,
   "dependencies": ["webhook"],
   "documentation": "https://github.com/salihinsaealal/wirid-homeassistant",
