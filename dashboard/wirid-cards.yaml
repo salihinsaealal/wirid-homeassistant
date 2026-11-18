@@ -83,8 +83,9 @@
       ]]]
 
 # ---------- 2. Each dhikr today: coloured bars ----------
-# Lists every dhikr this phone reports (a *_today sensor whose wirid_prefix attribute equals P), so new
-# dhikr appear on their own. Colour/monogram come from the sensor; fallback grey + first 2 letters.
+# Shows the dhikr counted today; "Show all" expands the rest this phone reports (a *_today sensor whose
+# wirid_prefix attribute equals P), so new dhikr appear on their own. Colour/monogram come from the
+# sensor; fallback grey + first 2 letters.
 - type: custom:button-card
   triggers_update: all
   show_name: false
@@ -119,8 +120,10 @@
                      all: n(a.all_time_entity || `sensor.${P}${a.slug}_all_time`) };
           })
           .sort((a, b) => b.today - a.today || b.all - a.all);
-        const max = Math.max(1, ...list.map(d => d.today));
-        const rows = list.map(d => `
+        const counted = list.filter(d => d.today > 0);
+        const rest = list.filter(d => !d.today);
+        const max = Math.max(1, ...counted.map(d => d.today));
+        const rows = ds => ds.map(d => `
           <div style="display:flex;align-items:center;gap:10px;opacity:${d.today ? 1 : 0.45}">
             <div style="width:28px;height:28px;border-radius:50%;background:${d.c};color:#06140F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">${d.m}</div>
             <div style="flex:1;min-width:0">
@@ -134,8 +137,16 @@
               <div style="font-size:11px;color:var(--secondary-text-color);margin-top:2px">${d.all.toLocaleString()} all time</div>
             </div>
           </div>`).join('');
-        return `<div style="font-size:15px;font-weight:700;color:var(--primary-text-color);margin-bottom:12px">Each dhikr today</div>
-                <div style="display:flex;flex-direction:column;gap:10px">${rows}</div>`;
+        const top = counted.length
+          ? `<div style="display:flex;flex-direction:column;gap:10px">${rows(counted)}</div>`
+          : `<div style="font-size:13px;color:var(--secondary-text-color)">No dhikr yet today</div>`;
+        const more = !rest.length ? '' : `
+          <style>.wd-all summary{list-style:none}.wd-all summary::-webkit-details-marker{display:none}.wd-chev{display:inline-block;transition:transform .15s}.wd-all[open] .wd-chev{transform:rotate(90deg)}</style>
+          <details class="wd-all">
+            <summary style="font-size:13px;color:var(--secondary-text-color);cursor:pointer;margin-top:10px"><span class="wd-chev">▸</span> Show all · ${rest.length} more</summary>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">${rows(rest)}</div>
+          </details>`;
+        return `<div style="font-size:15px;font-weight:700;color:var(--primary-text-color);margin-bottom:12px">Each dhikr today</div>${top}${more}`;
       ]]]
 
 # ---------- 3. By prayer time: gold columns ----------
