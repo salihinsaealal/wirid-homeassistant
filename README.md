@@ -13,7 +13,7 @@ Your dhikr statistics from the **Wirid** Android app, in Home Assistant. Wirid c
 
 [![Open in Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=salihinsaealal&repository=wirid-homeassistant&category=integration)
 
-Settings → Marketplace (HACS on older Home Assistant) → search **Wirid** → Install → restart Home Assistant.
+Settings → Marketplace (or HACS on older Home Assistant) → search **Wirid** → Install → restart Home Assistant.
 
 Until Wirid is listed in the catalog, add it by link:
 
