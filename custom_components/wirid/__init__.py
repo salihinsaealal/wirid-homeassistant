@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .cards import async_register_cards
+from .cards import async_register_cards, async_unregister_cards
 from .const import CONF_WEBHOOK_ID, DOMAIN, signal_update
 from .payload import PayloadError, Snapshot, parse
 from .store import SnapshotStore
@@ -53,6 +53,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> bool:
     """Set up a phone: load its last snapshot and open its webhook."""
+    # Re-sync the card resource: deleting the last phone removes it, and adding one back
+    # without a restart must restore it.
+    await async_register_cards(hass)
     store = SnapshotStore(hass, entry.entry_id)
     entry.runtime_data = WiridData(store=store, snapshot=await store.load())
 
@@ -82,3 +85,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> bool:
     """Unload a phone."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> None:
+    """Remove the cards' dashboard resource with the last phone (not on unload or reload)."""
+    if not [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]:
+        await async_unregister_cards(hass)
