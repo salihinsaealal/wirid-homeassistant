@@ -46,8 +46,13 @@ class FakeResources:
         self.items = list(items or [])
         self.loaded = loaded
         self.async_create_item = AsyncMock(side_effect=lambda d: self.items.append({"id": "new", "url": d["url"], "type": d["res_type"]}))
-        self.async_update_item = AsyncMock()
+        self.async_update_item = AsyncMock(side_effect=self._update)
         self.async_delete_item = AsyncMock(side_effect=lambda i: self.items.__setitem__(slice(None), [x for x in self.items if x["id"] != i]))
+
+    def _update(self, item_id, data):
+        for x in self.items:
+            if x["id"] == item_id:
+                x.update(url=data["url"], type=data["res_type"])
 
     def async_items(self):
         return self.items
