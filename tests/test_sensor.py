@@ -147,3 +147,13 @@ async def test_last_fourteen_days_attributes(hass, hass_client_no_auth):
     await client.post(f"/api/webhook/{entry.data['webhook_id']}", json=data)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.wirid_subhanallah_today").attributes["days"] is None
+
+
+async def test_last_sent_identifies_phone_before_first_sync(hass):
+    """The cards find a phone that hasn't synced yet, so they can say "Waiting for the first sync"."""
+    await _setup(hass, user_id="u1")
+    s = hass.states.get("sensor.wirid_last_sent")
+    assert s.state == "unknown"
+    assert s.attributes["wirid_prefix"] == "wirid_"
+    assert s.attributes["wirid_user_id"] == "u1"
+    assert "wirid_prefix" not in hass.states.get("sensor.wirid_today_total").attributes

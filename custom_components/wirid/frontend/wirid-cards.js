@@ -345,6 +345,16 @@ class WiridCard extends HTMLElement {
     return this._hass;
   }
 
+  // HA sets this in the card picker and editor, sometimes after hass and the config.
+  set preview(value) {
+    this._preview = !!value;
+    this._render();
+  }
+
+  get preview() {
+    return !!this._preview;
+  }
+
   connectedCallback() {
     // Midnight turns a phone stale without any state change, so re-check once a minute.
     clearInterval(this._tick);

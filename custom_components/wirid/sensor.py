@@ -71,6 +71,12 @@ class FixedSensor(WiridEntity, SensorEntity):
         if snap is None:
             self._attr_native_value = None
             self._attr_available = True
+            if oid == "last_sent":
+                # Lets the dashboard cards find a phone that hasn't synced yet ("Waiting for the first sync").
+                self._attr_extra_state_attributes = {
+                    "wirid_user_id": self._entry.data.get(CONF_USER_ID),
+                    "wirid_prefix": self._entry.data[CONF_PREFIX],
+                }
             return
         if oid == "last_sent":
             self._attr_native_value = dt_util.parse_datetime(snap.sent) if snap.sent else None
