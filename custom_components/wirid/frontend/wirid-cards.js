@@ -35,6 +35,11 @@ const STR = {
   active: "active",
   lastSession: "last session",
   synced: "Synced",
+  familyToday: "Family today",
+  noFamily: "No Wirid phones yet. Add one in Settings → Devices & services → Wirid.",
+  title: "Title",
+  phones: "Phones (none ticked = every phone)",
+  nameFor: "Name for",
 };
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -254,6 +259,65 @@ function summaryBody(ctx) {
 
 const summaryKeys = (ctx) => [ctx.id("active_days"), ctx.id("last_session"), ctx.phone.entityId];
 
+// Wirid (all): the six bodies in one card.
+const ALL = [
+  { body: todayBody, keys: (ctx) => todayKeys.map(ctx.id) },
+  { body: dhikrBody, keys: dhikrKeys },
+  { body: waktuBody, keys: (ctx) => WAKTU.map(([, k]) => ctx.id(`today_${k}`)) },
+  { body: periodsBody, keys: periodsKeys },
+  { body: daysBody, keys: daysKeys },
+  { body: summaryBody, keys: summaryKeys },
+];
+
+function allBody(ctx) {
+  const [today, ...rest] = ALL;
+  const glow = ctx.status === "stale" ? "" : `background:${todayGlow(ctx)};`;
+  return `<div style="margin:-16px -18px 0;padding:16px 18px;${glow}">${today.body(ctx)}</div>`
+    + rest.map((s) => `<div class="divider"></div>${s.body(ctx)}`).join("");
+}
+
+// Wirid family: one row per phone.
+const FAMILY_KEYS = ["today_total", "today_goal", "today_goal_percent", "streak_current"];
+const initials = (name) => String(name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+
+function familyKeys(ctx) {
+  return ctx.list.flatMap((p) => [p.entityId, ...FAMILY_KEYS.map((k) => `sensor.${p.prefix}${k}`)]);
+}
+
+function familyBody(ctx, el) {
+  const rows = core.familyRows(ctx.list, ctx.hass.states, ctx.now, ctx.tz, ctx.config);
+  el.style.display = "";
+  if (!rows.length) {
+    if (!el.preview) {
+      el.style.display = "none";
+      return "";
+    }
+    return `<ha-card><div class="note">${STR.noFamily}</div></ha-card>`;
+  }
+  const row = (r) => {
+    const i = core.tierIndex(r.lap), col = TIERS[i];
+    const under = r.lap > 1 ? TIERS[core.tierIndex(r.lap - 1)] + "80" : "rgba(127,127,127,0.15)";
+    const line = r.status === "waiting" ? esc(STR.waiting)
+      : r.status === "stale" ? esc(core.syncedLabel(r.sent, ctx.now, ctx.tz))
+        : `<ha-icon icon="mdi:fire" style="--mdc-icon-size:13px;color:${ctx.pal.streak};vertical-align:-2px"></ha-icon> ${r.streak} ${STR.days} · `
+          + `<span style="color:${ctx.pal.tier[i]};font-weight:600">${r.lap > 1 ? `×${r.lap} ${TIER_NAMES[i]}` : `${r.percent}%`}</span>`;
+    return `<div style="display:flex;align-items:center;gap:10px;opacity:${r.status === "fresh" ? 1 : 0.55}">
+        <div style="width:32px;height:32px;border-radius:50%;background:${col};color:#06140F;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">${esc(initials(r.name))}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:13px">
+            <span class="ellipsis" style="font-weight:600">${esc(r.name)}</span><span style="font-weight:700">${core.fmt(r.total)}</span>
+          </div>
+          <div style="height:6px;border-radius:3px;background:${under};margin-top:4px">
+            <div style="height:6px;border-radius:3px;width:${(Math.min(r.frac, 1) * 100).toFixed(1)}%;background:${col}"></div>
+          </div>
+          <div class="sec ellipsis" style="margin-top:3px">${line}</div>
+        </div>
+      </div>`;
+  };
+  return `<ha-card><div class="title" style="margin-bottom:12px">${esc(ctx.config.title || STR.familyToday)}</div>
+    <div style="display:flex;flex-direction:column;gap:12px">${rows.map(row).join("")}</div></ha-card>`;
+}
+
 // ---------- the shared card element ----------
 
 const fire = (el, type, detail) => el.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
@@ -397,6 +461,56 @@ class WiridPhoneEditor extends HTMLElement {
   }
 }
 
+// ---------- editor: the family card ----------
+
+class WiridFamilyEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...(config || {}) };
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._render();
+  }
+
+  _render() {
+    if (!this._hass || !this._config) return;
+    const list = core.phones(this._hass.states, this._hass.entities, this._hass.devices);
+    const chosen = Array.isArray(this._config.phones) ? this._config.phones : [];
+    if (!this._form) {
+      this._form = document.createElement("ha-form");
+      this._form.computeLabel = (s) => (s.name === "title" ? STR.title : s.name === "phones" ? STR.phones
+        : `${STR.nameFor} ${(list.find((p) => `name_${p.prefix}` === s.name) || {}).name || ""}`);
+      this._form.addEventListener("value-changed", (ev) => {
+        const v = ev.detail.value;
+        const config = { ...this._config };
+        if (v.title) config.title = v.title;
+        else delete config.title;
+        const prefixes = v.phones || [];
+        if (prefixes.length) {
+          config.phones = prefixes.map((prefix) => {
+            const name = (v[`name_${prefix}`] || "").trim();
+            return name ? { prefix, name } : { prefix };
+          });
+        } else delete config.phones;
+        this._config = config;
+        fire(this, "config-changed", { config });
+      });
+      this.appendChild(this._form);
+    }
+    this._form.hass = this._hass;
+    this._form.schema = [
+      { name: "title", selector: { text: {} } },
+      { name: "phones", selector: { select: { multiple: true, options: list.map((p) => ({ value: p.prefix, label: p.name })) } } },
+      ...chosen.map((c) => ({ name: `name_${c.prefix}`, selector: { text: {} } })),
+    ];
+    const data = { title: this._config.title || "", phones: chosen.map((c) => c.prefix) };
+    chosen.forEach((c) => { data[`name_${c.prefix}`] = c.name || ""; });
+    this._form.data = data;
+  }
+}
+
 // ---------- registration ----------
 
 const CARDS = [
@@ -412,12 +526,17 @@ const CARDS = [
     spec: { keys: daysKeys, body: daysBody, size: 4 } },
   { type: "wirid-summary-card", name: "Wirid summary", description: "Active days, the last session and the last sync.",
     spec: { keys: summaryKeys, body: summaryBody, size: 1 } },
+  { type: "wirid-card", name: "Wirid (all)", description: "All six Wirid cards in one, for a quick start.",
+    spec: { keys: (ctx) => ALL.flatMap((s) => s.keys(ctx)), body: allBody, after: dhikrAfter, size: 16 } },
+  { type: "wirid-family-card", name: "Wirid family", description: "Every phone's day at a glance, one row each.",
+    spec: { family: true, keys: familyKeys, body: familyBody, editor: "wirid-family-editor", size: 3 } },
 ];
 
 const define = (tag, cls) => {
   if (!customElements.get(tag)) customElements.define(tag, cls);
 };
 define("wirid-phone-editor", WiridPhoneEditor);
+define("wirid-family-editor", WiridFamilyEditor);
 window.customCards = window.customCards || [];
 for (const c of CARDS) {
   define(c.type, class extends WiridCard {
