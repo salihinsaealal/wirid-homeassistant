@@ -11,14 +11,18 @@ from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
+from .cards import async_register_cards
 from .const import CONF_WEBHOOK_ID, DOMAIN, signal_update
 from .payload import PayloadError, Snapshot, parse
 from .store import SnapshotStore
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -39,6 +43,12 @@ def _keep_dropped_dhikr(old: Snapshot | None, new: Snapshot) -> Snapshot:
     present = {d.slug for d in new.dhikr}
     kept = tuple(replace(d, today=0, days=None) for d in old.dhikr if d.slug not in present)
     return replace(new, dhikr=new.dhikr + kept) if kept else new
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Load the Wirid dashboard cards (once, for every phone)."""
+    await async_register_cards(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WiridConfigEntry) -> bool:
