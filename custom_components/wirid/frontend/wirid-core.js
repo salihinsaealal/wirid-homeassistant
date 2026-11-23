@@ -117,8 +117,8 @@ export function dhikrList(states, prefix, owner) {
       if (owner && name.startsWith(owner + " ")) name = name.slice(owner.length + 1);
       const c = /^#[0-9a-fA-F]{6}$/.test(a.color || "") ? a.color : DHIKR_FALLBACK;
       const m = a.mono || name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase();
-      return { name, c, m, today: Number(s.state) || 0,
-        all: readNumber(states, a.all_time_entity || `sensor.${prefix}${a.slug}_all_time`),
+      const allId = a.all_time_entity || `sensor.${prefix}${a.slug}_all_time`;
+      return { name, c, m, today: Number(s.state) || 0, all: readNumber(states, allId), allId,
         days: Array.isArray(a.days) ? a.days.map((v) => Number(v) || 0) : null, entityId: s.entity_id };
     })
     .sort((a, b) => b.today - a.today || b.all - a.all);

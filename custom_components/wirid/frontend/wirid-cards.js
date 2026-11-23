@@ -19,6 +19,22 @@ const STR = {
   best: "best",
   min: "min",
   sessions: "sessions",
+  dhikrToday: "Each dhikr today",
+  allTime: "all time",
+  noDhikrToday: "No dhikr yet today",
+  showAll: "Show all",
+  more: "more",
+  byPrayer: "By prayer time",
+  mostAt: "Most at",
+  nothingToday: "Nothing yet today",
+  periods: "Periods",
+  last14: "Last 14 days",
+  updateApp: "Update the Wirid app on the phone to see this chart.",
+  none14: "No dhikr in these 14 days yet",
+  day: "day",
+  active: "active",
+  lastSession: "last session",
+  synced: "Synced",
 };
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -86,6 +102,157 @@ function todayGlow(ctx) {
   const c = rgb(TIERS[core.tierIndex(lap)]);
   return `radial-gradient(120% 140% at 0% 0%, rgba(${c},0.22) 0%, rgba(${c},0.04) 55%, var(--ha-card-background, var(--card-background-color)) 100%)`;
 }
+
+// Each dhikr today: coloured bars; "Show all" opens the ones not counted today.
+const dhikrOf = (ctx) => core.dhikrList(ctx.hass.states, ctx.P, ctx.phone.name);
+const dhikrKeys = (ctx) => dhikrOf(ctx).flatMap((d) => [d.entityId, d.allId]);
+
+function dhikrBody(ctx) {
+  const list = dhikrOf(ctx);
+  const counted = list.filter((d) => d.today > 0), rest = list.filter((d) => !d.today);
+  const max = Math.max(1, ...counted.map((d) => d.today));
+  const rows = (ds) => ds.map((d) => `
+    <div style="display:flex;align-items:center;gap:10px;opacity:${d.today ? 1 : 0.45}">
+      <div style="width:28px;height:28px;border-radius:50%;background:${d.c};color:#06140F;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">${esc(d.m)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:13px">
+          <span class="ellipsis" style="font-weight:600">${esc(d.name)}</span>
+          <span style="font-weight:700">${core.fmt(d.today)}</span>
+        </div>
+        <div style="height:6px;border-radius:3px;background:rgba(127,127,127,0.15);margin-top:4px">
+          <div style="height:6px;border-radius:3px;width:${(d.today / max * 100).toFixed(1)}%;background:linear-gradient(90deg, ${d.c}99, ${d.c})"></div>
+        </div>
+        <div class="sec" style="margin-top:2px">${core.fmt(d.all)} ${STR.allTime}</div>
+      </div>
+    </div>`).join("");
+  const top = counted.length
+    ? `<div style="display:flex;flex-direction:column;gap:10px">${rows(counted)}</div>`
+    : `<div class="note" style="font-size:13px">${STR.noDhikrToday}</div>`;
+  const more = !rest.length ? "" : `
+    <style>.all summary{list-style:none;cursor:pointer}.all summary::-webkit-details-marker{display:none}.chev{display:inline-block;transition:transform .15s}.all[open] .chev{transform:rotate(90deg)}</style>
+    <details class="all"${ctx.ui.showAll ? " open" : ""}>
+      <summary class="note" style="font-size:13px;margin-top:10px"><span class="chev">▸</span> ${STR.showAll} · ${rest.length} ${STR.more}</summary>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">${rows(rest)}</div>
+    </details>`;
+  return `<div class="title" style="margin-bottom:12px">${STR.dhikrToday}</div>${top}${more}`;
+}
+
+function dhikrAfter(root, ctx) {
+  const d = root.querySelector("details.all");
+  if (d) d.addEventListener("toggle", () => { ctx.ui.showAll = d.open; });
+}
+
+// By prayer time: nine columns, gold by day, blue at night.
+const WAKTU = [["Sbh", "subuh"], ["Syk", "syuruk"], ["Dhu", "dhuha"], ["Zwl", "zawal"], ["Zhr", "zohor"],
+  ["Asr", "asar"], ["Mgb", "maghrib"], ["Isy", "isyak"], ["Thj", "tahajjud"]];
+
+function waktuBody(ctx) {
+  const w = WAKTU.map(([l, k]) => ({ l, v: ctx.n(`today_${k}`), night: k === "isyak" || k === "tahajjud" }));
+  const max = Math.max(1, ...w.map((x) => x.v));
+  const top = w.reduce((a, b) => (b.v > a.v ? b : a), w[0]);
+  const cols = w.map((x) => {
+    const h = x.v ? Math.max(6, x.v / max * 90) : 4;
+    const c = x.night ? "#8C9CFF" : "#FFC93C", tc = x.night ? ctx.pal.night : ctx.pal.gold;
+    const lit = x === top && x.v;
+    return `<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="sec" style="font-size:10px;height:12px;white-space:nowrap">${x.v ? core.fmt(x.v) : ""}</div>
+        <div style="height:90px;display:flex;align-items:flex-end;width:100%;justify-content:center">
+          <div style="width:70%;max-width:22px;height:${h}px;border-radius:6px;background:${x.v ? `linear-gradient(180deg, ${c}, ${c}66)` : "rgba(127,127,127,0.15)"};${lit ? `box-shadow:0 0 10px ${c}88` : ""}"></div>
+        </div>
+        <div style="font-size:11px;color:${lit ? tc : "var(--secondary-text-color)"};font-weight:${lit ? 700 : 500}">${x.l}</div>
+      </div>`;
+  }).join("");
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px">
+      <span class="title">${STR.byPrayer}</span>
+      <span style="font-size:12px;color:${ctx.pal.gold};font-weight:600">${top.v ? `${STR.mostAt} ${top.l}` : STR.nothingToday}</span>
+    </div>
+    <div style="display:flex;gap:2px">${cols}</div>`;
+}
+
+// Periods: three totals with up/down pills.
+const PERIODS = [["week", "7 days", "vs prev 7 days"], ["month", "Month", "vs last month"], ["year", "Year", "vs last year"]];
+
+function periodsBody(ctx) {
+  const tile = ([k, label, sub]) => {
+    const ch = (ctx.hass.states[ctx.id(`${k}_change`)] || {}).state;
+    const has = ch !== undefined && ch !== "" && !Number.isNaN(Number(ch));
+    const v = Number(ch), up = v >= 0, c = up ? ctx.pal.up : ctx.pal.down;
+    const pill = has ? `<span style="display:inline-block;max-width:100%;padding:2px 7px;border-radius:999px;background:${c}22;color:${c};font-size:11px;font-weight:700;white-space:nowrap">${up ? "▲" : "▼"} ${Math.abs(v)}%</span>` : "";
+    return `<div style="flex:1 1 0;min-width:0;overflow:hidden;padding:10px 8px;border-radius:16px;background:rgba(127,127,127,0.08)">
+        <div class="ellipsis" style="font-size:12px;color:var(--secondary-text-color);font-weight:600">${label}</div>
+        <div class="ellipsis" style="font-size:clamp(16px, 5.2vw, 22px);font-weight:700;margin:4px 0 6px">${core.fmtCompact(ctx.n(`${k}_total`))}</div>
+        ${pill}<div class="sec" style="font-size:10px;line-height:1.25;margin-top:4px;overflow-wrap:anywhere">${sub}</div>
+      </div>`;
+  };
+  return `<div class="title" style="margin-bottom:10px">${STR.periods}</div>
+    <div style="display:flex;gap:6px">${PERIODS.map(tile).join("")}</div>`;
+}
+
+const periodsKeys = (ctx) => PERIODS.flatMap(([k]) => [ctx.id(`${k}_total`), ctx.id(`${k}_change`)]);
+
+// Last 14 days: one bar per day, stacked by dhikr in their app colours.
+function daysBody(ctx) {
+  const dates = (ctx.hass.states[ctx.phone.entityId].attributes || {}).days || [];
+  const head = `<div class="title">${STR.last14}</div>`;
+  if (!dates.length) return head + `<div class="note" style="margin-top:6px">${STR.updateApp}</div>`;
+  const list = dhikrOf(ctx)
+    .map((d) => {
+      const days = dates.map((_, i) => (d.days ? d.days[i] || 0 : 0));
+      return { ...d, days, sum: days.reduce((x, y) => x + y, 0) };
+    })
+    .filter((d) => d.sum > 0)
+    .sort((a, b) => b.sum - a.sum);
+  const totals = dates.map((_, i) => list.reduce((t, d) => t + d.days[i], 0));
+  const all = totals.reduce((x, y) => x + y, 0);
+  const max = Math.max(1, ...totals);
+  const H = 110;
+  const cols = dates.map((ds, i) => {
+    const dt = new Date(ds + "T00:00:00");
+    const last = i === dates.length - 1;
+    const segs = list.filter((d) => d.days[i] > 0).map((d) =>
+      `<div title="${esc(d.name)}: ${d.days[i]}" style="height:${(d.days[i] / max * H).toFixed(1)}px;background:${d.c}"></div>`).join("");
+    return `<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="sec" style="font-size:9px;height:11px;white-space:nowrap">${totals[i] ? core.fmtCompact(totals[i]) : ""}</div>
+        <div style="height:${H}px;width:100%;display:flex;align-items:flex-end;justify-content:center">
+          <div style="width:72%;max-width:18px;display:flex;flex-direction:column-reverse;border-radius:5px;overflow:hidden;${totals[i] ? "" : "height:3px;background:rgba(127,127,127,0.15)"}">${segs}</div>
+        </div>
+        <div style="font-size:10px;line-height:1.1;text-align:center;color:${last ? "var(--primary-text-color)" : "var(--secondary-text-color)"};font-weight:${last ? 700 : 500}">${"SMTWTFS"[dt.getDay()]}<br>${dt.getDate()}</div>
+      </div>`;
+  }).join("");
+  const legend = list.map((d) => `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--secondary-text-color)">
+      <span style="width:9px;height:9px;border-radius:50%;background:${d.c}"></span>${esc(d.name)} <b style="color:var(--primary-text-color)">${core.fmt(d.sum)}</b></span>`).join("");
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px">${head}
+      <span class="sec" style="font-size:12px">${core.fmt(all)} · ${core.fmt(Math.round(all / dates.length))}/${STR.day}</span></div>
+    <div style="display:flex;gap:2px">${cols}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px">${legend || `<span class="sec">${STR.none14}</span>`}</div>`;
+}
+
+const daysKeys = (ctx) => [ctx.phone.entityId, ...dhikrOf(ctx).map((d) => d.entityId)];
+
+// Summary: active days, last session, last sync.
+const when = (iso, tz) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "—"
+    : `${new Intl.DateTimeFormat("en-GB", { timeZone: tz, weekday: "short" }).format(d)} ${core.clock(d, tz)}`;
+};
+
+function summaryBody(ctx) {
+  const s = ctx.hass.states[ctx.id("last_session")] || { state: "", attributes: {} };
+  const has = s.state && s.state !== "unavailable" && s.state !== "unknown";
+  const item = (icon, c, big, small) => `<div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:12px;background:${c}22;color:${c};display:flex;align-items:center;justify-content:center;flex:none">
+        <ha-icon icon="${icon}" style="--mdc-icon-size:18px"></ha-icon></div>
+      <div style="min-width:0"><div class="ellipsis" style="font-size:15px;font-weight:700">${big}</div>
+      <div class="ellipsis sec">${small}</div></div></div>`;
+  return `<div style="display:flex;gap:12px">
+      ${item("mdi:calendar-check", ctx.pal.tier[0], `${core.fmt(ctx.n("active_days"))} ${STR.days}`, STR.active)}
+      ${item("mdi:history", ctx.pal.minutes, has ? `${core.fmt(Number(s.state))} · ${esc(s.attributes.routine || "")}` : "—",
+        `${STR.lastSession} ${when(s.attributes.ended, ctx.tz)}`)}
+    </div>
+    <div class="sec" style="font-size:10px;text-align:right;margin-top:8px">${STR.synced} ${when(ctx.phone.sent, ctx.tz)}</div>`;
+}
+
+const summaryKeys = (ctx) => [ctx.id("active_days"), ctx.id("last_session"), ctx.phone.entityId];
 
 // ---------- the shared card element ----------
 
@@ -235,6 +402,16 @@ class WiridPhoneEditor extends HTMLElement {
 const CARDS = [
   { type: "wirid-today-card", name: "Wirid today", description: "Today's ring, goal tier, streak, minutes and sessions.",
     spec: { keys: (ctx) => todayKeys.map(ctx.id), body: todayBody, glow: todayGlow, size: 3 } },
+  { type: "wirid-dhikr-card", name: "Wirid dhikr", description: "Each dhikr counted today, in its app colour.",
+    spec: { keys: dhikrKeys, body: dhikrBody, after: dhikrAfter, size: 4 } },
+  { type: "wirid-waktu-card", name: "Wirid prayer times", description: "Today's dhikr in each of the nine waktu.",
+    spec: { keys: (ctx) => WAKTU.map(([, k]) => ctx.id(`today_${k}`)), body: waktuBody, size: 3 } },
+  { type: "wirid-periods-card", name: "Wirid periods", description: "Last 7 days, month and year, with the change.",
+    spec: { keys: periodsKeys, body: periodsBody, size: 2 } },
+  { type: "wirid-days-card", name: "Wirid 14 days", description: "The last 14 days, stacked by dhikr.",
+    spec: { keys: daysKeys, body: daysBody, size: 4 } },
+  { type: "wirid-summary-card", name: "Wirid summary", description: "Active days, the last session and the last sync.",
+    spec: { keys: summaryKeys, body: summaryBody, size: 1 } },
 ];
 
 const define = (tag, cls) => {

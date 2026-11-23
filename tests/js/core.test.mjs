@@ -96,6 +96,8 @@ test("dhikrList: this phone's dhikr, owner name stripped, sorted by today", () =
   assert.equal(list[0].c, "#9AA4B1");
   assert.equal(list[0].m, "IS");
   assert.equal(list[1].all, 4000);
+  assert.equal(list[1].allId, "sensor.wirid_subhanallah_all_time");
+  assert.equal(list[0].allId, "sensor.wirid_istighfar_all_time");
 });
 
 test("familyRows: fresh by today's total, stale last", () => {
