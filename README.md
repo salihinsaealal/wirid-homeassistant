@@ -66,11 +66,26 @@ Only `*_all_time` are totals for long-term statistics, so Home Assistant can gra
 
 ## Dashboard
 
-`dashboard/wirid-cards.yaml` holds the colourful cards (today's ring, each dhikr, waktu, periods, last 14 days, consistency). They need [button-card](https://github.com/custom-cards/button-card) (Marketplace / HACS).
+Wirid comes with its own dashboard cards. There is nothing else to install: edit a dashboard → **Add card** → search **Wirid**.
 
-Paste the items under a view's `cards:`. Every card finds the phone linked to whoever is looking: you see your stats, your family see theirs, and someone with no phone sees nothing.
+| Card | Shows |
+|---|---|
+| **Wirid today** | Today's ring in the goal-tier colour, %, tier and lap, streak, best, minutes, sessions |
+| **Wirid dhikr** | Each dhikr counted today in its app colour, with "Show all" for the rest |
+| **Wirid prayer times** | Today's dhikr in each of the nine waktu |
+| **Wirid periods** | Last 7 days, this month and this year, with the change |
+| **Wirid 14 days** | The last 14 days, stacked by dhikr |
+| **Wirid summary** | Active days, the last session and the last sync |
+| **Wirid (all)** | All six above in one card |
+| **Wirid family** | Every phone's day, one row each, sorted by today's total |
 
-The "Last 14 days" card draws each day as a bar stacked by dhikr, in the app's colours. It follows the viewer like the others, so there is nothing to edit; it needs Wirid app 0.4.0 or newer on the phone.
+Each one-person card has a **Phone** setting. The default, *Whoever is looking*, shows the phone linked to the person viewing the dashboard (someone with no phone sees nothing), so one shared dashboard works for a whole family. Pick a specific phone instead for a wall tablet or a shared login. The family card lets you choose which phones to show and rename them.
+
+A phone that hasn't synced since midnight is shown faded with "Last synced …", so yesterday's numbers are never mistaken for today's. The 14-day card needs Wirid app 0.4.0 or newer on the phone.
+
+Colours follow the app: emerald up to the daily goal, then gold, purple, rosé and silver for each extra lap. On a light theme, coloured text uses darker shades so it stays readable.
+
+The older `dashboard/wirid-cards.yaml` (button-card templates) still works but is replaced by these cards and will be removed in a later release.
 
 ## Payload (for developers)
 

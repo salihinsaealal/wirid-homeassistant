@@ -1,3 +1,6 @@
+# REPLACED: since integration 0.3.0, Wirid has built-in cards (Add card → search "Wirid"). This file is kept
+# for one release for existing dashboards and will be removed.
+#
 # Wirid for Home Assistant: shared colourful stats dashboard (one file for every phone).
 #
 # Requires: the Wirid integration (this repo, installed through HACS) and the custom:button-card
