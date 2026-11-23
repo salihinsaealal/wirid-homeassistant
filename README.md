@@ -85,7 +85,63 @@ A phone that hasn't synced since midnight is shown faded with "Last synced …",
 
 Colours follow the app: emerald up to the daily goal, then gold, purple, rosé and silver for each extra lap. On a light theme, coloured text uses darker shades so it stays readable.
 
-The older `dashboard/wirid-cards.yaml` (button-card templates) still works but is replaced by these cards and will be removed in a later release.
+### Examples
+
+Everything can be set in the card editor; this is the YAML it writes, if you prefer the code editor.
+
+A personal dashboard that each family member opens on their own phone (everyone sees their own stats):
+
+```yaml
+type: vertical-stack
+cards:
+  - type: custom:wirid-today-card
+  - type: custom:wirid-dhikr-card
+  - type: custom:wirid-waktu-card
+  - type: custom:wirid-periods-card
+  - type: custom:wirid-days-card
+  - type: custom:wirid-summary-card
+```
+
+Or the same in one card:
+
+```yaml
+type: custom:wirid-card
+```
+
+A kitchen tablet logged in as a shared user: the whole family, plus one person's day pinned below it:
+
+```yaml
+type: vertical-stack
+cards:
+  - type: custom:wirid-family-card
+    title: Family today
+    phones:            # optional: leave out to show every phone, sorted by today's total
+      - prefix: wirid_
+        name: Abah
+      - prefix: wirid_umi_
+        name: Umi
+  - type: custom:wirid-today-card
+    phone: wirid_umi_  # a fixed phone instead of whoever is looking
+```
+
+A phone's prefix is the start of its entity IDs: `wirid_` for the first phone (`sensor.wirid_today_total`), `wirid_<name>_` for later ones. The card editor's dropdowns list the phones by name, so you rarely need to type it.
+
+| Option | Cards | Meaning |
+|---|---|---|
+| `phone` | all but family | A phone's prefix. Leave out for *whoever is looking*. |
+| `title` | family | Heading (default "Family today"). |
+| `phones` | family | Which phones, in this order, each with an optional display `name`. |
+
+### Tips
+
+- **Renaming a phone:** Settings → Devices & services → Wirid → the device → ✏️ → Name. When Home Assistant offers to rename the entity IDs too, choose **No**: the IDs keep your history and graphs. The cards pick up the new name by themselves.
+- **A card is empty:** in *whoever is looking* mode a card hides itself for someone with no linked phone. Link the phone to that person (the integration's **Configure**), or pick a fixed phone in the card.
+- **"Waiting for the first sync":** the phone is added but hasn't sent yet. Open Wirid on the phone with **Send stats to Home Assistant** on.
+- **Cards don't show up after an update:** refresh the browser (or clear the app's cache in the Companion app).
+
+### The old YAML cards
+
+`dashboard/wirid-cards.yaml` (button-card templates) still works but is replaced by these cards and will be removed in a later release. To switch, delete those cards from the dashboard and add the Wirid cards above; nothing else changes.
 
 ## Payload (for developers)
 
