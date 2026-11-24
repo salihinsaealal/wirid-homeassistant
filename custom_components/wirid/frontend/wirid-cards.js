@@ -3,7 +3,7 @@
 
 const VERSION = new URL(import.meta.url).searchParams.get("v") || "dev";
 const core = await import(new URL("./wirid-core.js" + new URL(import.meta.url).search, import.meta.url).href);
-const { TIERS, TIER_NAMES } = core;
+const { TIERS } = core;
 
 // Every word the cards show, in one place so a translation can be added later.
 const STR = {
@@ -90,7 +90,7 @@ function todayBody(ctx) {
         <div style="font-size:13px;color:var(--secondary-text-color);font-weight:600">${STR.today}</div>
         <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
           <span style="font-size:26px;font-weight:700;color:${text}">${n("today_goal_percent")}%</span>
-          <span style="font-size:13px;color:${text};font-weight:600">${TIER_NAMES[i]}${lap > 1 ? ` · ${STR.lap} ${lap}` : ""}</span>
+          <span style="font-size:13px;color:${text};font-weight:600">${core.tierName(lap)}${lap > 1 ? ` · ${STR.lap} ${lap}` : ""}</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:6px">
           ${chip("mdi:fire", `${n("streak_current")} ${STR.days}`, pal.streak)}
@@ -300,7 +300,7 @@ function familyBody(ctx, el) {
     const line = r.status === "waiting" ? esc(STR.waiting)
       : r.status === "stale" ? esc(core.syncedLabel(r.sent, ctx.now, ctx.tz))
         : `<ha-icon icon="mdi:fire" style="--mdc-icon-size:13px;color:${ctx.pal.streak};vertical-align:-2px"></ha-icon> ${r.streak} ${STR.days} · `
-          + `<span style="color:${ctx.pal.tier[i]};font-weight:600">${r.lap > 1 ? `×${r.lap} ${TIER_NAMES[i]}` : `${r.percent}%`}</span>`;
+          + `<span style="color:${ctx.pal.tier[i]};font-weight:600">${r.lap > 1 ? `×${r.lap} ${core.tierName(r.lap)}` : `${r.percent}%`}</span>`;
     return `<div style="display:flex;align-items:center;gap:10px;opacity:${r.status === "fresh" ? 1 : 0.55}">
         <div style="width:32px;height:32px;border-radius:50%;background:${col};color:#06140F;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">${esc(initials(r.name))}</div>
         <div style="flex:1;min-width:0">

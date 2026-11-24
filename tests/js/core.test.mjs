@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  lapOf, tierIndex, palette, TIERS, TIER_NAMES, phones, resolvePhone, readNumber,
+  lapOf, tierIndex, tierName, palette, TIERS, phones, resolvePhone, readNumber,
   phoneStatus, syncedLabel, fmtCompact, dhikrList, familyRows,
 } from "../../custom_components/wirid/frontend/wirid-core.js";
 
@@ -31,7 +31,11 @@ test("palette: exact colours in dark, darker text in light", () => {
   assert.equal(palette(false).tier[4], "#4E5D73");
   assert.equal(TIERS[3], "#FF9ECF");
   assert.equal(TIERS[2], "#3FA9FF");
-  assert.deepEqual(TIER_NAMES, ["On the way", "Gold", "Saiyan Blue", "Rosé", "Ultra Instinct"]);
+  assert.equal(tierName(1), "On the way");
+  assert.equal(tierName(2), "Goal reached!");
+  assert.equal(tierName(4), "Outstanding!");
+  assert.equal(tierName(6), "Phenomenal!");
+  assert.equal(tierName(9), "Phenomenal!");
 });
 
 test("phones: name from the device registry, else the friendly name", () => {

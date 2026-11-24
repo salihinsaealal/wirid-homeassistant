@@ -51,7 +51,7 @@
         }
         const col = tier(lap);
         const under = lap === 1 ? null : tier(lap - 1);
-        const tierName = ['On the way', 'Gold', 'Saiyan Blue', 'Rosé', 'Ultra Instinct'][Math.min(lap, 5) - 1];
+        const tierName = ['On the way', 'Goal reached!', 'Excellent!', 'Outstanding!', 'Extraordinary!', 'Phenomenal!'][Math.min(lap, 6) - 1];
         const r = 50, C = 2 * Math.PI * r, dash = (C * Math.min(frac, 1)).toFixed(1);
         const pct = n(`sensor.${P}today_goal_percent`);
         const chip = (icon, text, c) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:${c}22;color:${c};font-size:12px;font-weight:600">

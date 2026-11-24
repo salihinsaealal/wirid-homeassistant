@@ -2,7 +2,12 @@
 
 /** Tier colours for laps 1..5+ (the app's; sensor keys emerald, gold, blue, pink, silver). */
 export const TIERS = ["#34E3A0", "#FFD84D", "#3FA9FF", "#FF9ECF", "#E4ECF7"];
-export const TIER_NAMES = ["On the way", "Gold", "Saiyan Blue", "Rosé", "Ultra Instinct"];
+/** What each lap is called on the cards: words of praise rising with the level, as in the app (never colour names). */
+export const TIER_NAMES = ["On the way", "Goal reached!", "Excellent!", "Outstanding!", "Extraordinary!", "Phenomenal!"];
+
+export function tierName(lap) {
+  return TIER_NAMES[Math.min(Math.max(lap, 1), TIER_NAMES.length) - 1];
+}
 export const DHIKR_FALLBACK = "#9AA4B1";
 
 const DARK_TEXT = {
