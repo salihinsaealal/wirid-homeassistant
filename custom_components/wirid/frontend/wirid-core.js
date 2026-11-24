@@ -1,8 +1,8 @@
 // Pure helpers for the Wirid cards: no DOM, tested with `node --test tests/js/*.test.mjs`.
 
-/** Tier colours for laps 1..5+ (the app's): emerald, gold, purple, rosé, silver. */
-export const TIERS = ["#34E3A0", "#FFD84D", "#B98CFF", "#FF9ECF", "#E4ECF7"];
-export const TIER_NAMES = ["On the way", "Gold", "Purple", "Rosé", "Silver"];
+/** Tier colours for laps 1..5+ (the app's; sensor keys emerald, gold, blue, pink, silver). */
+export const TIERS = ["#34E3A0", "#FFD84D", "#3FA9FF", "#FF9ECF", "#E4ECF7"];
+export const TIER_NAMES = ["On the way", "Gold", "Saiyan Blue", "Rosé", "Ultra Instinct"];
 export const DHIKR_FALLBACK = "#9AA4B1";
 
 const DARK_TEXT = {
@@ -11,7 +11,7 @@ const DARK_TEXT = {
 };
 // Same hues, dark enough for text on a light card (each ≥4.5:1 on white).
 const LIGHT_TEXT = {
-  tier: ["#0B7A55", "#8A6400", "#6B3FC6", "#B8326F", "#4E5D73"], gold: "#8A6200", night: "#4453C4",
+  tier: ["#0B7A55", "#8A6400", "#1559B8", "#B8326F", "#4E5D73"], gold: "#8A6200", night: "#4453C4",
   up: "#0B7A55", down: "#C42A50", minutes: "#0A6FA3", streak: "#B8521A", sessions: "#6B3FC6",
 };
 
@@ -20,11 +20,11 @@ export function palette(dark) {
   return dark ? DARK_TEXT : LIGHT_TEXT;
 }
 
-/** Which goal lap today's total is on, and how far through it (0..1). */
+/** Which goal lap today's total is on, and how far through it (0..1). Reaching the goal opens the next lap (app 0.11). */
 export function lapOf(total, goal) {
   if (!(goal > 0)) return { lap: 1, frac: 0 };
-  if (total <= goal) return { lap: 1, frac: total / goal };
-  const lap = Math.ceil(total / goal);
+  if (total < goal) return { lap: 1, frac: total / goal };
+  const lap = Math.floor(total / goal) + 1;
   return { lap, frac: (total - (lap - 1) * goal) / goal };
 }
 

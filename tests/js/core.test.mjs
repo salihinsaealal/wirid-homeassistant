@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  lapOf, tierIndex, palette, TIERS, phones, resolvePhone, readNumber,
+  lapOf, tierIndex, palette, TIERS, TIER_NAMES, phones, resolvePhone, readNumber,
   phoneStatus, syncedLabel, fmtCompact, dhikrList, familyRows,
 } from "../../custom_components/wirid/frontend/wirid-core.js";
 
@@ -14,11 +14,12 @@ const sent = (prefix, at, userId = "u1") => ({
 const num = (id, v, attributes = {}) => ({ entity_id: id, state: String(v), attributes });
 const byId = (...ss) => Object.fromEntries(ss.map((s) => [s.entity_id, s]));
 
-test("lapOf: under, past and exactly at the goal laps", () => {
+test("lapOf: under, past and exactly at the goal laps (reaching the goal opens the next lap, as in the app)", () => {
   assert.deepEqual(lapOf(398, 1000), { lap: 1, frac: 0.398 });
+  assert.deepEqual(lapOf(1000, 1000), { lap: 2, frac: 0 });
   assert.equal(lapOf(1398, 1000).lap, 2);
   assert.ok(Math.abs(lapOf(1398, 1000).frac - 0.398) < 1e-9);
-  assert.deepEqual(lapOf(2000, 1000), { lap: 2, frac: 1 });
+  assert.deepEqual(lapOf(2000, 1000), { lap: 3, frac: 0 });
   assert.equal(lapOf(6200, 1000).lap, 7);
   assert.equal(tierIndex(7), 4);
   assert.deepEqual(lapOf(5, 0), { lap: 1, frac: 0 });
@@ -29,6 +30,8 @@ test("palette: exact colours in dark, darker text in light", () => {
   assert.equal(palette(false).tier[1], "#8A6400");
   assert.equal(palette(false).tier[4], "#4E5D73");
   assert.equal(TIERS[3], "#FF9ECF");
+  assert.equal(TIERS[2], "#3FA9FF");
+  assert.deepEqual(TIER_NAMES, ["On the way", "Gold", "Saiyan Blue", "Rosé", "Ultra Instinct"]);
 });
 
 test("phones: name from the device registry, else the friendly name", () => {
