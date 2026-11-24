@@ -13,7 +13,7 @@
 # card is display:none. button-card cannot share a function between pasted cards, so the small
 # resolver at the top of each card is repeated byte for byte (it defines `P`, the prefix).
 #
-# Colours follow the app: emerald up to the daily goal, then one colour per extra lap: gold, Saiyan Blue, rosé, silver (Ultra Instinct); each dhikr
+# Colours follow the app: emerald up to the daily goal, then one colour per extra lap: gold, blue, rosé, silver; each dhikr
 # keeps its app colour; prayer times are gold; up emerald / down rose.
 
 # ---------- 1. Today: tier ring + chips ----------

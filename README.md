@@ -52,7 +52,7 @@ Each phone's entities start with its prefix: `sensor.wirid_` for the first phone
 | Entity | Meaning | Unit |
 |---|---|---|
 | `today_total`, `today_goal`, `today_goal_percent` | Today and your daily goal | dhikr, % |
-| `today_tier` | `emerald` below the goal, then one per lap from the goal on: `gold`, `blue` (Saiyan Blue; `purple` before app 0.11), `pink` (shown as rosé), `silver` (Ultra Instinct, 5th lap on) | |
+| `today_tier` | `emerald` below the goal, then one per lap from the goal on: `gold`, `blue` (`purple` before app 0.11), `pink` (shown as rosé), `silver` (5th lap on) | |
 | `today_sessions`, `today_minutes` | Sessions and time today | sessions, min |
 | `today_subuh` … `today_tahajjud` | Today by waktu (9) | dhikr |
 | `<dhikr>_today`, `<dhikr>_all_time` | Each dhikr you've used (`_today` carries `all_time_entity`, its pair's ID) | dhikr |
@@ -83,7 +83,7 @@ Each one-person card has a **Phone** setting. The default, *Whoever is looking*,
 
 A phone that hasn't synced since midnight is shown faded with "Last synced …", so yesterday's numbers are never mistaken for today's. The 14-day card needs Wirid app 0.4.0 or newer on the phone.
 
-Colours follow the app: emerald below the daily goal, then gold, Saiyan Blue, rosé and silver (Ultra Instinct) for each lap from the goal on. On a light theme, coloured text uses darker shades so it stays readable.
+Colours follow the app: emerald below the daily goal, then gold, blue, rosé and silver for each lap from the goal on. On a light theme, coloured text uses darker shades so it stays readable.
 
 ### Examples
 
