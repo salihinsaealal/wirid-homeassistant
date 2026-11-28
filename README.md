@@ -15,12 +15,6 @@ Your dhikr statistics from the **Wirid** Android app, in Home Assistant. Wirid c
 
 Settings → Marketplace (or HACS on older Home Assistant) → search **Wirid** → Install → restart Home Assistant.
 
-Until Wirid is listed in the catalog, add it by link:
-
-**Home Assistant 2026.11 or newer (Marketplace):** Settings → Marketplace → **Add from link** → `https://github.com/salihinsaealal/wirid-homeassistant` → Install → restart Home Assistant.
-
-**Older Home Assistant with HACS:** HACS → ⋮ → Custom repositories → add `https://github.com/salihinsaealal/wirid-homeassistant` as an *Integration* → install **Wirid** → restart.
-
 ## Connect a phone
 
 1. Settings → Devices & services → **Add integration** → **Wirid**.
@@ -51,7 +45,7 @@ Each phone's entities start with its prefix: `sensor.wirid_` for the first phone
 
 | Entity | Meaning | Unit |
 |---|---|---|
-| `today_total`, `today_goal`, `today_goal_percent` | Today and your daily goal | dhikr, % |
+| `today_total`, `today_goal`, `today_goal_percent` | Today and your daily goal (`today_total` carries `color`: today's tier colour as `#RRGGBB`, the cards' colours) | dhikr, % |
 | `today_tier` | `emerald` below the goal, then one per lap from the goal on: `gold`, `blue` (`purple` before app 0.11), `pink` (shown as rosé), `silver` (5th lap on) | |
 | `today_sessions`, `today_minutes` | Sessions and time today | sessions, min |
 | `today_subuh` … `today_tahajjud` | Today by waktu (9) | dhikr |

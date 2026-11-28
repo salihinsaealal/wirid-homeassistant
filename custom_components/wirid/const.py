@@ -16,6 +16,11 @@ WAKTU_NAMES = {
     "asar": "Asar", "maghrib": "Maghrib", "isyak": "Isyak", "tahajjud": "Tahajjud",
 }
 
+# Today's lap past the goal: the app's tier keys and their dark-theme colours, lap 1..5+ (#RRGGBB).
+# Must match TIERS in frontend/wirid-core.js (tests/test_tier_color.py checks it).
+TIER_KEYS = ("emerald", "gold", "blue", "pink", "silver")
+TIER_COLORS = ("#34E3A0", "#FFD84D", "#3FA9FF", "#FF9ECF", "#E4ECF7")
+
 
 def signal_update(entry_id: str) -> str:
     """Dispatcher signal fired when a phone's snapshot changes."""

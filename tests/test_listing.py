@@ -20,7 +20,7 @@ def test_manifest_category():
 
 
 def test_manifest_version():
-    assert _manifest()["version"] == "0.3.3"
+    assert _manifest()["version"] == "0.3.4"
 
 
 def test_translations_only():

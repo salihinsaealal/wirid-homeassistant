@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_PREFIX, CONF_USER_ID, DOMAIN, WAKTU, signal_update
+from .const import CONF_PREFIX, CONF_USER_ID, DOMAIN, TIER_COLORS, TIER_KEYS, WAKTU, signal_update
 from .entity import WiridEntity
 from .naming import FIXED, dhikr_ids
 from .payload import Dhikr, Snapshot
@@ -49,6 +49,14 @@ SPECS: dict[str, Spec] = {
 }
 
 
+def tier_color(tier: str, total: int, goal: int) -> str:
+    """Today's lap colour: from the tier key, else worked out like the cards' lapOf (capped at silver)."""
+    if tier in TIER_KEYS:
+        return TIER_COLORS[TIER_KEYS.index(tier)]
+    lap = 1 if goal <= 0 or total < goal else total // goal + 1
+    return TIER_COLORS[min(lap, len(TIER_COLORS)) - 1]
+
+
 class FixedSensor(WiridEntity, SensorEntity):
     """One of the fixed stats."""
 
@@ -77,6 +85,8 @@ class FixedSensor(WiridEntity, SensorEntity):
                     "wirid_user_id": self._entry.data.get(CONF_USER_ID),
                     "wirid_prefix": self._entry.data[CONF_PREFIX],
                 }
+            elif oid == "today_total":
+                self._attr_extra_state_attributes = {"color": TIER_COLORS[0]}
             return
         if oid == "last_sent":
             self._attr_native_value = dt_util.parse_datetime(snap.sent) if snap.sent else None
@@ -97,6 +107,9 @@ class FixedSensor(WiridEntity, SensorEntity):
             self._attr_extra_state_attributes = {
                 "routine": snap.last_session.routine, "ended": snap.last_session.ended,
             }
+        elif oid == "today_total":
+            # For the Waktu Solat watch face, which colours the value with it; keep this small.
+            self._attr_extra_state_attributes = {"color": tier_color(snap.tier, snap.today_total, snap.goal)}
 
 
 class DhikrSensor(WiridEntity, SensorEntity):
